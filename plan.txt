@@ -1,0 +1,46 @@
+Input: Initial FEN String || Default Fen String
+       Initial Rule Set  || Default rule set
+
+Functions that will be required:
+
+Class Constructors:
+	Square Constructor: Constructor for square object; each square on board will have its own object in a squares object
+	Piece Constructor:  Constructor for piece object; each piece will have its own object with its properties in a pieces object
+
+FEN:
+	Function to take in FEN from input and return fen array of components split by " " and numbers parsed
+	Function to take in FEN array, validate it, and return boolean
+	Function to take in FEN array[0], and return the correct square array
+	Function to take in FEN array[0], and return the correct piece array
+	Function to take in 6 values that make up FEN, and return FEN string
+
+PGN:
+	Function that takes in PGN formatted move and square array and piece array and returns start square and end square of move
+	Function to take in start and end square of move and fen history array and return PGN formatted move
+
+Move:
+	Function that takes in start square, end square, and move type (normal, capture, castle, en passant) and returns new board object
+	Function that takes in start square and end square and makes normal move
+	Function that takes in start square and end square and makes capture
+	Function that takes in start square and end square and castles
+	Function that takes in start square and end square and does en passant
+	Function that takes in board object and handles promotions
+
+	Function that takes in board object, turn, en passant, castling and returns a list of all possible moves
+	Function that maps over pieces and returns possible normal and capturing moves
+	Function that takes in en passant square and return possible en passant moves
+	Function that takes in castling and returns possible castling
+	Function that takes in all moves lists, tries them, and returns filtered version excluding those that allow check
+	Function for each piece that has there move rules as either spots or vectors, and returns their move possibilities
+
+	Take in possible move list and return decided upon move
+
+Game:
+	Function that takes in fen history list, move list, and board object and returns if game is over by using helper functions
+	Function that takes in move list and returns if in stalemate or checkmate
+	Function to take in board object and check for insufficient material
+	Function that takes in fen history list and returns if 3 fold repetition
+	Function that takes in current fen and returns if 50 move rule is invoked
+
+Other:
+	Function that takes in board object and displays board (start with command line, do other stuff later on)
