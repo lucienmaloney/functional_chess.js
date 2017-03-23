@@ -20,24 +20,48 @@ module.exports = {
 				]);
 	},
 
-	// TODO: Check that the pieces on the board are all valid pieces
-	validate_fen: function( board, turn, castling, en_passant, halfmoves, fullmoves ) {
-		// Test each board substring to be 8 chars/squares long:
-		const setup_bool   = R.all( x => R.length(x) === 8, R.split("/", board) );
-		// Test board string to be 71 chars long (64 squares + 7 slashes)
-		const len_bool     = R.length( board ) === 71;
-		// Test turn is one of two valid values: 'w' or 'b'
-		const turn_bool    = turn === "w" || turn === "b";
-		// Test that removing "K" "Q" "k" and "q" in castling string yields an empty string
-		const cas_str_bool = "" === R.replace("q","",R.replace("Q","",R.replace("k","",R.replace("K","",castling))));
-		// Test that en_passant square is valid. If there is no en passant square, NaN is the accepted value
-		const passant_bool = Number.isNaN(en_passant) || Helper.validate_sqr(en_passant);
-		// Check that halfmoves and fullmoves fall inside their necessary ranges
-		const half_m_bool  = Number.isInteger(halfmoves) && halfmoves >= 0 && halfmoves < 100;
-		const full_m_bool  = Number.isInteger(fullmoves) && fullmoves >= 1;
+	validate_pieces: function( str ) {
+		return "" === R.replace( / |r|n|b|q|k|p|R|N|B|Q|K|P|\//g, "", str );
+	},
 
-		// Finally, check to be sure all of these conditions are met
-		return setup_bool && len_bool && turn_bool && cas_str_bool && passant_bool && half_m_bool && full_m_bool;
+	validate_board_str: function( str ) {
+		const split_board = R.split( "/", str );
+		const board_has_8_rows = R.length( split_board ) === 8;
+		const each_row_has_8_columns = R.all( x => R.length(x) === 8, split_board );
+
+		return board_has_8_rows && each_row_has_8_columns && module.exports.validate_pieces( str );
+	},
+
+	validate_turn: function( turn ) {
+		return turn === "w" || turn === "b";
+	},
+
+	// A valid castling string should contain just the letters "q" "Q" "k" and "K" either once or zero times
+	// Replacing each of these letters with an empty char should yield an empty string in a valid castle_str
+	validate_castle_str: function( str ) {
+		return "" === R.replace("q","",R.replace("Q","",R.replace("k","",R.replace("K","", str ))));
+	},
+
+	// value of en_passant should either be a valid square, or if no en_passant is possible than NaN
+	validate_en_passant: function( sqr ) {
+		return Number.isNaN( sqr ) || Helper.validate_sqr( sqr );
+	},
+
+	validate_halfmove: function( halfmove ) {
+		return Number.isInteger( halfmove ) && halfmove >= 0 && halfmove < 100;
+	},
+
+	validate_fullmove: function( fullmove ) {
+		return Number.isInteger( fullmove ) && fullmove >= 1;
+	},
+
+	validate_fen: function( board, turn, castling, en_passant, halfmoves, fullmoves ) {
+		return module.exports.validate_board_str( board ) &&
+			   module.exports.validate_turn( turn ) &&
+			   module.exports.validate_castle_str( castling ) &&
+			   module.exports.validate_en_passant( en_passant ) &&
+			   module.exports.validate_halfmove( halfmoves ) &&
+			   module.exports.validate_fullmove( fullmoves );
 	},
 
 	create_sqr_array_from_fen: function( board ) {
