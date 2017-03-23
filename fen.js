@@ -67,17 +67,17 @@ module.exports = {
 	create_sqr_array_from_fen: function( board ) {
 		// map_indexed is like map but it also takes in an index
 		const map_indexed = R.addIndex(R.map);
-		// no_slash strips all slashes
+
 		const no_slash = str => R.replace( /\//g, "", str );
-		// get_x and get_y both take the index of the char in the string to determine its x and y coords on the board
-		const get_x = index => index % 8 + 1;
-		const get_y = index => 8 - parseInt( index / 8 );
-		// Get side returns "", "w", or "b"
-		const get_side = letter => letter === " " ? "" : letter === R.toUpper(letter) ? "w" : "b";
-		// get_piece sets piece to lowercase for consistency
-		const get_piece = letter => R.toLower(letter);
-		// Finally, make_square takes all of these functions and uses them to create a square object
-		const make_square = (val, idx) => new Square( get_side(val), get_piece(val), get_x(idx), get_y(idx) );
+		const get_x_from_fen_index = index => index % 8 + 1;
+		const get_y_from_fen_index = index => 8 - parseInt( index / 8 );
+		const get_side_from_fen_letter = letter => letter === " " ? "" : letter === R.toUpper(letter) ? "w" : "b";
+
+		const make_square = (val, idx) => new Square( get_side_from_fen_letter(val),
+			                                          R.toLower(val),
+			                                          get_x_from_fen_index(idx),
+			                                          get_y_from_fen_index(idx) 
+			                                        );
 		return map_indexed( make_square, no_slash(board) );
 	},
 
@@ -86,9 +86,9 @@ module.exports = {
 		const fen_arr = module.exports.parse_fen( fen );
 
 		if (module.exports.validate_fen(...fen_arr)) {
-			const chess = new Board(module.exports.create_sqr_array_from_fen(fen_arr[0]), ...R.tail(fen_arr));
-			// const doesn't make object values immutable, so the additional object.freeze is needed
-			Object.freeze(chess);
+			const sqr_array = module.exports.create_sqr_array_from_fen(fen_arr[0]);
+			const chess = new Board( sqr_array, ...R.tail(fen_arr));
+			Object.freeze(chess); // This makes the board immutable
 			return chess;
 		} else {
 			throw "The fen provided is not valid.";
