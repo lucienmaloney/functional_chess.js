@@ -27,9 +27,39 @@ module.exports = {
 		return parse_chess_square( R.replace( letters, alpharray[letters], sqr ) );
 	},
 
+	// Squares should fall into sequence: 11,12,13,14,15,16,17,18, 21,22,23,24,25,26,27,28, 31,32... ...86,87,88
 	validate_sqr: function( sqr ) {
-		// Squares should fall into sequence: 11,12,13,14,15,16,17,18, 21,22,23,24,25,26,27,28, 31,32... ...86,87,88
 		return (sqr > 10 && sqr < 89 && sqr % 10 !== 0 && sqr % 10 !== 9);
+	},
+
+	// "54" -> [ 5, 4 ]
+	sqr_to_xy: function( sqr ) {
+		return [ parseInt(sqr[0]), parseInt(sqr[1]) ];
+	},
+
+	// [ 5, 4 ] -> "54"
+	xy_to_sqr: function( [x,y] ) {
+		return "" + x + y;
+	},
+
+	plus_or_minus: function( a ) {
+		return [ -a, a ];
+	},
+
+	inc_until_false: function( callback, condition, start = 1 ) {
+		const result = callback( condition );
+		if( condition( result ) ) {
+			return [ result, module.exports.inc_until_false( callback, condition, start + 1 ) ];
+		}
+		return null;
+	},
+
+	get_opposite_color: function( color ) {
+		if( color === "" ) {
+			throw( "Can't get opposite color of empty square." );
+		} else {
+			return color === "w" ? "b" : "w";
+		}
 	}
 }
 
