@@ -6,53 +6,90 @@ const Helper = require('./helper');
 
 const move_template = (delta_1, delta_2) => ((x,y) => [x + delta_1, y + delta_2]);
 
-module.exports = {
-	
-	create_move_functions: function( delta_1, delta_2 ) {
-		if( delta_1 === delta_2 ) {
-			return [
-						move_template(  delta_1,  delta_1 ),
-						move_template( -delta_1,  delta_1 ),
-						move_template(  delta_1, -delta_1 ),
-						move_template( -delta_1, -delta_1 )
-				   ];
-		}
+function create_move_functions( delta_1, delta_2 = delta_1 ) {
+	if( delta_1 === delta_2 ) {
 		return [
-					move_template(  delta_1,  delta_2 ),
-					move_template( -delta_1,  delta_2 ),
-					move_template(  delta_1, -delta_2 ),
-					move_template( -delta_1, -delta_2 ),
-					move_template(  delta_2,  delta_1 ),
-					move_template( -delta_2,  delta_1 ),
-					move_template(  delta_2, -delta_1 ),
-					move_template( -delta_2, -delta_1 )
+					move_template(  delta_1,  delta_1 ),
+					move_template( -delta_1,  delta_1 ),
+					move_template(  delta_1, -delta_1 ),
+					move_template( -delta_1, -delta_1 )
 			   ];
-	},
+	}
+	return R.uniq([
+				move_template(  delta_1,  delta_2 ),
+				move_template( -delta_1,  delta_2 ),
+				move_template(  delta_1, -delta_2 ),
+				move_template( -delta_1, -delta_2 ),
+				move_template(  delta_2,  delta_1 ),
+				move_template( -delta_2,  delta_1 ),
+				move_template(  delta_2, -delta_1 ),
+				move_template( -delta_2, -delta_1 )
+		   ]);
+}
 
-	get_moves_list_from_func( func, board, x_pos, y_pos, infinite_range ) {
+function neaten_move_list( list ) {
+	return R.flatten( list );
+}
+
+function create_moves( function_list, range_bool ) {
+	return function( board, x, y ) {
+		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, range_bool );
+		return R.map( make_moves, function_list );			
+	}
+}
+
+module.exports = {
+
+	get_moves_list_from_func: function( func, board, x_pos, y_pos, infinite_range ) {
 		const new_coords = func( x_pos, y_pos );
 		const new_pos = Helper.xy_to_sqr( new_coords );
-		if( board[new_pos].side === "" ) {
-			return R.concat( [new_pos], [module.exports.get_moves_list_from_func( func, board, new_coords[0], new_coords[1], infinite_range )] );
+		console.log( new_pos );
+		if( Helper.validate_sqr( new_pos ) && board[new_pos].side === "" ) {
+			if( !infinite_range ) {
+				return new_pos;
+			}
+			return R.concat( [new_pos], module.exports.get_moves_list_from_func( func, board, new_coords[0], new_coords[1], infinite_range ) );
 		}
 		return [];
-	}
-	/*
-	points_to_squares: function( points_list ) {
-		return R.map( Helper.xy_to_sqr, points_list );
 	},
 
-	validate_move: function( piece_color, sqr ) {
-		//return Helper.validate_sqr( sqr ) && 
+	get_knight_moves: () => create_moves( create_move_functions( 1, 2 ), false ),
+	get_bishop_moves: () => create_moves( create_move_functions( 1    ), true  ),
+	get_rook_moves:   () => create_moves( create_move_functions( 0, 1 ), true  ),
+	get_pawn_moves:   () => create_moves( move_template( 0, 1 ), false ),
+	get_queen_moves:  () => create_moves( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), true  ),
+	get_king_moves:   () => create_moves( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), false )
+/*
+	get_knight_moves: function( board, x, y ) {
+		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, false );
+		return R.map( make_moves, knight_functions );
 	},
 
-	generate_move_ray: function( x, y, delta_x, delta_y, board ) {
-		const target_sqr = "" + (x + delta_x) + (y + delta_y);
-		if( board[target_sqr].side !== board[ Helper.xy_to_sqr( [ x, y ] )].side ) {
+	get_bishop_moves: function( board, x, y ) {
+		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, true );
+		return R.map( make_moves, bishop_functions );
+	},
 
-		}
+	get_rook_moves: function( board, x, y ) {
+		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, true );
+		return R.map( make_moves, rook_functions );
+	},
+
+	get_queen_moves: function( board, x, y ) {
+		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, true );
+		return R.map( make_moves, queen_functions );
+	},
+
+	get_king_moves: function( board, x, y ) {
+		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, false );
+		return R.map( make_moves, king_functions );
+	},
+
+	get_pawn_moves: function( board, x, y ) {
+		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, false );
+		return R.map( make_moves, pawn_functions );
 	}
-	*/
+*/
 }
 
 })();
