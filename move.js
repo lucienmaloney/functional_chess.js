@@ -59,37 +59,6 @@ module.exports = {
 	get_pawn_moves:   () => create_moves( move_template( 0, 1 ), false ),
 	get_queen_moves:  () => create_moves( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), true  ),
 	get_king_moves:   () => create_moves( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), false )
-/*
-	get_knight_moves: function( board, x, y ) {
-		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, false );
-		return R.map( make_moves, knight_functions );
-	},
-
-	get_bishop_moves: function( board, x, y ) {
-		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, true );
-		return R.map( make_moves, bishop_functions );
-	},
-
-	get_rook_moves: function( board, x, y ) {
-		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, true );
-		return R.map( make_moves, rook_functions );
-	},
-
-	get_queen_moves: function( board, x, y ) {
-		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, true );
-		return R.map( make_moves, queen_functions );
-	},
-
-	get_king_moves: function( board, x, y ) {
-		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, false );
-		return R.map( make_moves, king_functions );
-	},
-
-	get_pawn_moves: function( board, x, y ) {
-		const make_moves = f => module.exports.get_moves_list_from_func( f, board, x, y, false );
-		return R.map( make_moves, pawn_functions );
-	}
-*/
 }
 
 })();
