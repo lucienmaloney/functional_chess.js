@@ -44,9 +44,11 @@ module.exports = {
 	get_knight_moves: () => create_moves( create_move_functions( 1, 2 ), false ),
 	get_bishop_moves: () => create_moves( create_move_functions( 1    ), true  ),
 	get_rook_moves:   () => create_moves( create_move_functions( 0, 1 ), true  ),
-	get_pawn_moves:   () => create_moves( move_template( [0], [1] ), false ),
 	get_queen_moves:  () => create_moves( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), true  ),
-	get_king_moves:   () => create_moves( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), false )
+	get_king_moves:   () => create_moves( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), false ),
+	// Pawns can only move forward, so white can only move in +y direction, and black in -y:
+	get_white_pawn_moves:  () => create_moves( move_template( [0], [1] ), false ),
+	get_black_pawn_moves:  () => create_moves( move_template( [0], [-1] ), false )
 }
 
 })();
