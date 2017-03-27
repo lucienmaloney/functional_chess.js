@@ -11,9 +11,9 @@ function create_move_functions( delta_1, delta_2 = delta_1 ) {
 	const d2 = [ delta_2, -delta_2 ];
 	if( !delta_1 && !delta_2 ) {
 		throw "A piece cannot have both delta values as 0.";
-	} else if( !delta_1 ) {
+	} else if( !delta_1 ) { // If delta_1 === 0
 		return R.concat( move_template( [delta_1], d2 ), move_template( d2, [delta_1] ));
-	} else if( !delta_2 ) {
+	} else if( !delta_2 ) { // If delta_2 === 0
 		return R.concat( move_template( [delta_2], d1 ), move_template( d1, [delta_2] ));
 	} else if( delta_1 === delta_2 ) {
 		return move_template( d1, d1 );
@@ -44,7 +44,7 @@ module.exports = {
 	get_knight_moves: () => create_moves( create_move_functions( 1, 2 ), false ),
 	get_bishop_moves: () => create_moves( create_move_functions( 1    ), true  ),
 	get_rook_moves:   () => create_moves( create_move_functions( 0, 1 ), true  ),
-	get_pawn_moves:   () => create_moves( move_template( 0, 1 ), false ),
+	get_pawn_moves:   () => create_moves( move_template( [0], [1] ), false ),
 	get_queen_moves:  () => create_moves( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), true  ),
 	get_king_moves:   () => create_moves( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), false )
 }

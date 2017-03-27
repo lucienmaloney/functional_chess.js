@@ -15,5 +15,9 @@ console.log( chess_board["31"] );
 
 console.log( Move.get_knight_moves()( chess_board, 3, 3 ));
 console.log( Move.get_rook_moves()( chess_board, 4, 4 ));
+console.log( Move.get_bishop_moves()( chess_board, 5, 5 ));
+console.log( Move.get_pawn_moves()( chess_board, 2, 5 ));
+console.log( Move.get_queen_moves()( chess_board, 4, 5 ));
+console.log( Move.get_king_moves()( chess_board, 5, 5 ));
 
 })( "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );
