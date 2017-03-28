@@ -62,36 +62,26 @@ function create_captures( function_list, range_bool ) {
 	}
 }
 
-function Piece( movement, range ) {
-	this.movement = movement;
-	this.range    = range;
+// Movement is the list of functions about how a piece can move
+// Range is whether the piece stops after one step or keeps going until hitting a wall or a piece
+// Capturing_movement is the list of function denoting how the piece captures. 
+// Capturing_movement is the same as movement for all pieces except the pawn
+function Piece( movement, range, capturing_movement = movement ) {
+	this.movement  = movement;
+	this.range     = range;
+	this.capturing = capturing_movement;
+	this.get_moves = create_moves( this.movement, this.range );
+	this.get_captures = create_captures( this.capturing, this.range );
 }
 
-const knight = new Piece( create_move_functions( 1, 2 ), false );
-const bishop = new Piece( create_move_functions( 1    ), true  );
-const rook   = new Piece( create_move_functions( 0, 1 ), true  );
-const queen  = new Piece( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), true  );
-const king   = new Piece( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), false );
-
 module.exports = {
-	get_knight_moves: () => create_moves( knight.movement, knight.range ),
-	get_bishop_moves: () => create_moves( bishop.movement, bishop.range ),
-	get_rook_moves:   () => create_moves( rook.movement,   rook.range   ),
-	get_queen_moves:  () => create_moves( queen.movement,  queen.range  ),
-	get_king_moves:   () => create_moves( king.movement,   king.range   ),
-
-	get_knight_captures: () => create_captures( knight.movement, knight.range ),
-	get_bishop_captures: () => create_captures( bishop.movement, bishop.range ),
-	get_rook_captures:   () => create_captures( rook.movement,   rook.range   ),
-	get_queen_captures:  () => create_captures( queen.movement,  queen.range  ),
-	get_king_captures:   () => create_captures( king.movement,   king.range   ),
-
-	// Pawns can only move forward, so white can only move in +y direction, and black in -y:
-	get_white_pawn_moves:  () => create_moves( move_template( [0], [ 1] ), false ),
-	get_black_pawn_moves:  () => create_moves( move_template( [0], [-1] ), false ),
-
-	get_white_pawn_captures: () => create_captures( move_template( [-1, 1], [ 1] ), false ),
-	get_black_pawn_captures: () => create_captures( move_template( [-1, 1], [-1] ), false )
+	knight: new Piece( create_move_functions( 1, 2 ), false ),
+	bishop: new Piece( create_move_functions( 1    ), true  ),
+	rook  : new Piece( create_move_functions( 0, 1 ), true  ),
+	queen : new Piece( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), true  ),
+	king  : new Piece( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), false ),
+	w_pawn: new Piece( move_template( [0], [ 1] ), false, move_template( [-1, 1], [ 1] )),
+	b_pawn: new Piece( move_template( [0], [-1] ), false, move_template( [-1, 1], [-1] ))
 }
 
 })();
