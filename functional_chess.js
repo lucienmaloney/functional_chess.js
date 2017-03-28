@@ -9,6 +9,7 @@ const Helper = require('./helper');
 const PGN    = require('./pgn');
 const Move   = require('./move');
 const Game   = require('./game');
+const MoveG  = require('./move_generator');
 
 const chess_board = FEN.get_board_from_fen( init_fen );
 console.log( chess_board["31"] );

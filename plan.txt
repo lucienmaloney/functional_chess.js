@@ -31,7 +31,7 @@ Move:
 	Function that takes in en passant square and return possible en passant moves
 	Function that takes in castling and returns possible castling
 	Function that takes in all moves lists, tries them, and returns filtered version excluding those that allow check
-	Function for each piece that has there move rules as either spots or vectors, and returns their move possibilities
+	Function for each piece that has their move rules as either spots or vectors, and returns their move possibilities
 
 	Take in possible move list and return decided upon move
 

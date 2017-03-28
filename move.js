@@ -71,12 +71,12 @@ function create_captures( function_list, range ) {
 // Capturing_movement is the same as movement for all pieces except the pawn
 // Ditto for capturing_range
 function Piece( movement, range, capturing_movement = movement, capturing_range = range ) {
-	this.movement  = movement;
-	this.range     = range;     // Range can be true for infinite range, false for range of 1, or a number for a numeric range value
+	this.movement        = movement;
+	this.range           = range; // Range can be true for infinite range, false for range of 1, or a number for a numeric range value
 	this.capturing       = capturing_movement;
 	this.capturing_range = capturing_range;
-	this.get_moves    = create_moves( this.movement, this.range );
-	this.get_captures = create_captures( this.capturing, this.capturing_range );
+	this.get_moves       = create_moves( this.movement, this.range );
+	this.get_captures    = create_captures( this.capturing, this.capturing_range );
 }
 
 module.exports = {
