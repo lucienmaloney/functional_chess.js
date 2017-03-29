@@ -9,9 +9,10 @@ module.exports = class Board {
 	constructor( array_of_square_objects, turn, castling, en_passant, halfmoves, fullmoves ) {
 		// These three lines map over each square in array_of_square_objects, creating a new method of Board
 		// For example the object Square { side: 'w', piece: 'p', x: 1, y: 2 } 
-		//									would have name "12" and could be referred to with this["12"]
+		//									would have name "12" and could be referred to with this.square_list["12"]
+		this.square_list = {};
 		const self = this;
-		const add_sqr = sqr => self["" + sqr.x + sqr.y] = sqr;
+		const add_sqr = sqr => self.square_list["" + sqr.x + sqr.y] = sqr;
 		R.map( add_sqr, array_of_square_objects );
 
 		// These 5 lines just set the incoming variables as methods of the class

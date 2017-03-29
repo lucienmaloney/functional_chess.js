@@ -60,6 +60,18 @@ module.exports = {
 		} else {
 			return color === "w" ? "b" : "w";
 		}
+	},
+
+	letter_to_piece: function( letter ) {
+		switch( letter ) {
+			case "b": return "bishop";
+			case "n": return "knight";
+			case "k": return "king";
+			case "q": return "queen";
+			case "r": return "rook";
+			case "p": return "pawn";
+			default: throw "Invalid piece letter in letter_to_piece."
+		}
 	}
 }
 

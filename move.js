@@ -25,7 +25,7 @@ function get_moves_list_from_func( func, board, x_pos, y_pos, range ) {
 	const new_coords = func( x_pos, y_pos );
 	const new_pos = Helper.xy_to_sqr( new_coords );
 	const valid_sqr = Helper.validate_sqr( new_pos );
-	if( Helper.validate_sqr( new_pos ) && board[new_pos].side === "" ) {
+	if( Helper.validate_sqr( new_pos ) && board.square_list[new_pos].side === "" ) {
 		const new_range = typeof(range) === "number" ? range - 1 : range;
 		if( !new_range ) {
 			return [new_pos];
@@ -40,7 +40,7 @@ function get_captures_list_from_func( func, board, x_pos, y_pos, range ) {
 	const new_pos = Helper.xy_to_sqr( new_coords );
 	const valid_sqr = Helper.validate_sqr( new_pos );
 	if( valid_sqr ) {
-		const new_pos_side = board[new_pos].side;
+		const new_pos_side = board.square_list[new_pos].side;
 		const new_range = typeof(range) === "number" ? range - 1 : range;
 		if( new_pos_side === "" && new_range ) {
 			return get_captures_list_from_func( func, board, new_coords[0], new_coords[1], new_range );
