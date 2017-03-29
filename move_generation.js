@@ -29,6 +29,18 @@ function apply_f_to_square( sqr ) {
 	throw "There was an invalid square input to apply_f_to_square: " + sqr.x + sqr.y;
 }
 
+function Choice( start, end, type ) {
+	this.start = start;
+	this.end = end;
+	this.type = type;
+}
+
+function format_options( opt_list, opt_type ) {
+	const sqr_to_pairs = (val, key, obj) => R.map( v => new Choice( key, v, opt_type ), val );
+	const pair_obj = R.mapObjIndexed( sqr_to_pairs, opt_list );
+	return R.flatten( R.values( pair_obj ));
+}
+
 function apply_to_all_squares( board ) {
 	const is_square_valid = sqr => sqr.side === board.turn;
 	const squares_to_use = R.filter( is_square_valid, board.square_list );
@@ -55,6 +67,13 @@ function get_valid_en_passant( board ) {
 
 function get_valid_promotion( board ) {
 
+}
+
+function get_all_valid_options( board ) {
+	return R.concat(
+		format_options( get_all_valid_moves( board ), "move" ),
+		format_options( get_all_valid_captures( board ), "capture" )
+	);
 }
 
 function make_move( board ) {
@@ -86,10 +105,7 @@ function get_all_options( board ) {
 }
 
 module.exports = {
-	apply_f_to_square: apply_f_to_square,
-	apply_to_all_squares: apply_to_all_squares,
-	get_all_valid_moves: get_all_valid_moves,
-	get_all_valid_captures: get_all_valid_captures
+	get_all_valid_options: get_all_valid_options
 };
 
 })();

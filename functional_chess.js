@@ -22,7 +22,6 @@ console.log( Move.w_pawn_init.get_captures( chess_board, 3, 6 ));
 console.log( Move.rook.get_moves( chess_board, 3, 3 ));
 console.log( Move.rook.get_captures( chess_board, 3, 3 ));
 
-console.log( MoveG.get_all_valid_moves( chess_board ));
-console.log( MoveG.get_all_valid_captures( chess_board ));
+console.log( MoveG.get_all_valid_options( chess_board ));
 
-})( "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );
+})( "rnbqkbnr/pppppppp/8/4N3/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );
