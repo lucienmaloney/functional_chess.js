@@ -22,6 +22,7 @@ console.log( Move.w_pawn_init.get_captures( chess_board, 3, 6 ));
 console.log( Move.rook.get_moves( chess_board, 3, 3 ));
 console.log( Move.rook.get_captures( chess_board, 3, 3 ));
 
-console.log( MoveG.apply_f_to_square( chess_board.square_list["11"] )("get_moves", chess_board));
+console.log( MoveG.get_all_valid_moves( chess_board ));
+console.log( MoveG.get_all_valid_captures( chess_board ));
 
 })( "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );

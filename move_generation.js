@@ -29,12 +29,20 @@ function apply_f_to_square( sqr ) {
 	throw "There was an invalid square input to apply_f_to_square: " + sqr.x + sqr.y;
 }
 
-function get_all_valid_moves( board ) {
+function apply_to_all_squares( board ) {
+	const is_square_valid = sqr => sqr.side === board.turn;
+	const squares_to_use = R.filter( is_square_valid, board.square_list );
+	return R.map( apply_f_to_square, squares_to_use );
+}
 
+function get_all_valid_moves( board ) {
+	const function_list = apply_to_all_squares( board );
+	return R.map( f => f( "get_moves", board ), function_list );
 }
 
 function get_all_valid_captures( board ) {
-
+	const function_list = apply_to_all_squares( board );
+	return R.map( f => f( "get_captures", board ), function_list );
 }
 
 function get_valid_castling( board ) {
@@ -78,7 +86,10 @@ function get_all_options( board ) {
 }
 
 module.exports = {
-	apply_f_to_square: apply_f_to_square
+	apply_f_to_square: apply_f_to_square,
+	apply_to_all_squares: apply_to_all_squares,
+	get_all_valid_moves: get_all_valid_moves,
+	get_all_valid_captures: get_all_valid_captures
 };
 
 })();
