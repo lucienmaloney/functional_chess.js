@@ -79,19 +79,55 @@ function get_all_valid_options( board ) {
 	);
 }
 
-function make_move( board, start, end ) {
-	// array, turn, castling, en passant, halfmoves, fullmoves
-	const start_sqr = board.square_list[start];
-	const end_sqr = board.square_list[end];
-	const sqr_obj = board.square_list;
-	const new_sqr_obj = R.set( R.lensProp(end), new Square(start_sqr.side, start_sqr.piece, end_sqr.x, end_sqr.y), R.set( R.lensProp(start), new Square("", " ", start_sqr.x, start_sqr.y), sqr_obj ));
-	const new_sqr_arr = R.values( new_sqr_obj );
-	const new_fullmoves = board.turn === "b" ? board.fullmoves + 1 : board.fullmoves;
-	const new_halfmoves = board.square_list[start].piece === "p" ? 0 : board.halfmoves + 1;
-	const new_en_passant = Math.abs(start - end) === 2 && board.square_list[start].piece === "p" ? (0 + start + end) / 2 : NaN;
-	const new_castling = "KQkq"; // TEMPORARY
-	const new_turn = Helper.get_opposite_color( board.turn );
+const get_new_turn = board => Helper.get_opposite_color( board.turn );
+const get_new_fullmove = board => board.turn === "b" ? board.fullmoves + 1 : board.fullmoves;
+const get_new_halfmove = (board, start_sqr) => start_sqr.piece === "p" ? 0 : board.halfmoves + 1;
 
+const get_new_en_passant = function( board, start_sqr, end_sqr ) {
+	const is_pawn_move     = start_sqr.piece === "p";
+	const is_two_step_move = Math.abs(start_sqr.y - end_sqr.y) === 2;
+
+	if( is_pawn_move && is_two_step_move ) {
+		return start_sqr.x.toString() + (( start_sqr.y + end_sqr.y) / 2 );
+	}
+	return NaN;
+}
+
+const get_new_castling_from_move = function( board, start_sqr ) {
+	const p = start_sqr.piece;
+	const x = start_sqr.x;
+	const is_white = board.turn === "w";
+	const castle_str = board.castling;
+	if( p === "k" ) {
+		return is_white ? R.replace( /KQ/, "", castle_str ) : R.replace( /kq/, "", castle_str );
+	} else if( p === "r" && x === 1 ) {
+		return is_white ? R.replace( /Q/, "", castle_str ) : R.replace( /q/, "", castle_str );
+	} else if( p === "r" && x === 8 ) {
+		return is_white ? R.replace( /K/, "", castle_str ) : R.replace( /k/, "", castle_str );
+	}
+	return castle_str;
+}
+
+const get_new_board_array_from_move = function( board, start, end ) {
+	const sqr_obj   = board.square_list;
+	const start_sqr = sqr_obj[start];
+	const end_sqr   = sqr_obj[end];
+	const new_start = new Square( "", " ", start_sqr.x, start_sqr.y );
+	const new_end   = new Square( start_sqr.side, start_sqr.piece, end_sqr.x, end_sqr.y );
+
+	return R.set( R.lensProp(end), new_end, R.set( R.lensProp(start), new_start, sqr_obj ));
+}
+
+function make_move( board, start, end ) {
+	const start_sqr = board.square_list[start];
+	const end_sqr   = board.square_list[end];
+
+	const new_sqr_arr    = get_new_board_array_from_move( board, start, end );
+	const new_turn       = get_new_turn( board );
+	const new_castling   = get_new_castling_from_move( board, start_sqr );
+	const new_en_passant = get_new_en_passant( board, start_sqr, end_sqr );
+	const new_halfmoves  = get_new_halfmove( board, start_sqr );
+	const new_fullmoves  = get_new_fullmove( board );
 	return new Board( new_sqr_arr, new_turn, new_castling, new_en_passant, new_halfmoves, new_fullmoves );
 }
 

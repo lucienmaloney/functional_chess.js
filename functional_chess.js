@@ -39,5 +39,14 @@ Game.log_board( chess_board4 );
 const chess_board5 = MoveG.make_move( chess_board4, "48", "84" );
 Game.log_board( chess_board5 );
 console.log( chess_board5 );
+console.log( MoveG.get_all_valid_options(chess_board5));
+const chess_board6 = MoveG.make_move( chess_board5, "51", "42" );
+Game.log_board( chess_board6 );
+console.log( chess_board6 );
+console.log( MoveG.get_all_valid_options(chess_board6));
+const chess_board7 = MoveG.make_move( chess_board6, "87", "85" );
+Game.log_board( chess_board7 );
+console.log( chess_board7 );
+console.log( MoveG.get_all_valid_options(chess_board7));
 
 })( "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );
