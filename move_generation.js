@@ -4,6 +4,7 @@
 const R      = require('ramda');
 const Helper = require('./helper');
 const Move   = require('./move');
+const Game   = require('./game');
 
 function apply_f_to_square( sqr ) {
 	if( sqr.side === "" ) {
@@ -76,23 +77,23 @@ function get_all_valid_options( board ) {
 	);
 }
 
-function make_move( board ) {
+function make_move( board, start, end ) {
 
 }
 
-function make_capture( board ) {
+function make_capture( board, start, end ) {
 
 }
 
-function make_castling( board ) {
+function make_castling( board, start, end ) {
 
 }
 
-function make_en_passant( board ) {
+function make_en_passant( board, start, end ) {
 
 }
 
-function make_promotion( board ) {
+function make_promotion( board, start, end ) {
 
 }
 

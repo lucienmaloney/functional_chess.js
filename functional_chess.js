@@ -23,5 +23,8 @@ console.log( Move.rook.get_moves( chess_board, 3, 3 ));
 console.log( Move.rook.get_captures( chess_board, 3, 3 ));
 
 console.log( MoveG.get_all_valid_options( chess_board ));
+console.log( chess_board );
 
-})( "rnbqkbnr/pppppppp/8/4N3/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );
+console.log( Game.log_board( chess_board ));
+
+})( "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );
