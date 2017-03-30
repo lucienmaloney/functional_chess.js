@@ -5,6 +5,8 @@ const R      = require('ramda');
 const Helper = require('./helper');
 const Move   = require('./move');
 const Game   = require('./game');
+const Square = require('./square');
+const Board  = require('./board');
 
 function apply_f_to_square( sqr ) {
 	if( sqr.side === "" ) {
@@ -78,7 +80,19 @@ function get_all_valid_options( board ) {
 }
 
 function make_move( board, start, end ) {
+	// array, turn, castling, en passant, halfmoves, fullmoves
+	const start_sqr = board.square_list[start];
+	const end_sqr = board.square_list[end];
+	const sqr_obj = board.square_list;
+	const new_sqr_obj = R.set( R.lensProp(end), new Square(start_sqr.side, start_sqr.piece, end_sqr.x, end_sqr.y), R.set( R.lensProp(start), new Square("", " ", start_sqr.x, start_sqr.y), sqr_obj ));
+	const new_sqr_arr = R.values( new_sqr_obj );
+	const new_fullmoves = board.turn === "b" ? board.fullmoves + 1 : board.fullmoves;
+	const new_halfmoves = board.square_list[start].piece === "p" ? 0 : board.halfmoves + 1;
+	const new_en_passant = Math.abs(start - end) === 2 && board.square_list[start].piece === "p" ? (0 + start + end) / 2 : NaN;
+	const new_castling = "KQkq"; // TEMPORARY
+	const new_turn = Helper.get_opposite_color( board.turn );
 
+	return new Board( new_sqr_arr, new_turn, new_castling, new_en_passant, new_halfmoves, new_fullmoves );
 }
 
 function make_capture( board, start, end ) {
@@ -106,7 +120,8 @@ function get_all_options( board ) {
 }
 
 module.exports = {
-	get_all_valid_options: get_all_valid_options
+	get_all_valid_options: get_all_valid_options,
+	make_move: make_move
 };
 
 })();
