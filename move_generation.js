@@ -108,6 +108,19 @@ const get_new_castling_from_move = function( board, start_sqr ) {
 	return castle_str;
 }
 
+const get_new_castling_from_capture = function( board, start_sqr, end_sqr ) {
+	const p = end_sqr.piece;
+	const x = end_sqr.x;
+	const is_white = board.turn === "w";
+	const move_checked = get_new_castling_from_move( board, start_sqr );
+	if( p === "r" && x === 1 ) {
+		return is_white ? R.replace( /q/, "", move_checked ) : R.replace( /Q/, "", move_checked );
+	} else if( p === "r" && x === 8 ) {
+		return is_white ? R.replace( /k/, "", move_checked ) : R.replace( /K/, "", move_checked );
+	}
+	return move_checked;
+}
+
 const get_new_board_array_from_move = function( board, start, end ) {
 	const sqr_obj   = board.square_list;
 	const start_sqr = sqr_obj[start];
@@ -132,7 +145,16 @@ function make_move( board, start, end ) {
 }
 
 function make_capture( board, start, end ) {
+	const start_sqr = board.square_list[start];
+	const end_sqr   = board.square_list[end];
 
+	const new_sqr_arr    = get_new_board_array_from_move( board, start, end );
+	const new_turn       = get_new_turn( board );
+	const new_castling   = get_new_castling_from_move( board, start_sqr );
+	const new_en_passant = NaN;
+	const new_halfmoves  = 0;
+	const new_fullmoves  = get_new_fullmove( board );
+	return new Board( new_sqr_arr, new_turn, new_castling, new_en_passant, new_halfmoves, new_fullmoves );
 }
 
 function make_castling( board, start, end ) {
