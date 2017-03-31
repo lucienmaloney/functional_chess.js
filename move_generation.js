@@ -11,25 +11,9 @@ const Board  = require('./board');
 function apply_f_to_square( sqr ) {
 	if( sqr.side === "" ) {
 		throw "Cannot use function apply_f_to_square on a square with no piece in it: " + sqr.x + sqr.y;
-	} else if( sqr.piece === "p" ) {
-		if( sqr.side === "w" ) {
-			if( sqr.y === 2 ) {
-				return ( f, board ) => Move.w_pawn_init[f]( board, sqr.x, sqr.y );
-			} else {
-				return ( f, board ) => Move.w_pawn[f]( board, sqr.x, sqr.y );
-			}
-		} else if ( sqr.side === "b" ) {
-			if( sqr.y === 2 ) {
-				return ( f, board ) => Move.b_pawn_init[f]( board, sqr.x, sqr.y );
-			} else {
-				return ( f, board ) => Move.b_pawn[f]( board, sqr.x, sqr.y );
-			}
-		}
-	} else {
-		const piece = Helper.letter_to_piece( sqr.piece );
-		return ( f, board ) => Move[piece][f]( board, sqr.x, sqr.y );
 	}
-	throw "There was an invalid square input to apply_f_to_square: " + sqr.x + sqr.y;
+	const piece = Helper.letter_to_piece( sqr.piece );
+	return ( f, board ) => Move[piece][f]( board, sqr.x, sqr.y );
 }
 
 function Choice( start, end, type ) {
@@ -52,7 +36,8 @@ function apply_to_all_squares( board ) {
 
 function get_all_valid_moves( board ) {
 	const function_list = apply_to_all_squares( board );
-	return R.map( f => f( "get_moves", board ), function_list );
+	const valid_moves = R.map( f => f( "get_moves", board ), function_list );
+	return valid_moves;
 }
 
 function get_all_valid_captures( board ) {
@@ -72,11 +57,24 @@ function get_valid_promotion( board ) {
 
 }
 
+function get_pawn_2_step_start_moves( board ) {
+	const new_y = board.turn === "w" ? "4" : "5";
+	const f = sqr => [(sqr.x).toString() + new_y];
+	const is_square_valid = sqr => sqr.piece === "p" && sqr.side === board.turn && (sqr.side === "w" && sqr.y === 2 || sqr.side === "b" && sqr.y === 7);
+	const squares_to_use = R.filter( is_square_valid, board.square_list );
+	return R.map( f, squares_to_use );
+}
+
 function get_all_valid_options( board ) {
-	return R.concat(
+	return R.flatten([
 		format_options( get_all_valid_moves( board ), "move" ),
+		format_options( get_pawn_2_step_start_moves( board ), "move" ),
 		format_options( get_all_valid_captures( board ), "capture" )
-	);
+	]);
+}
+
+function check_for_in_check( board ) {
+
 }
 
 const get_new_turn = board => Helper.get_opposite_color( board.turn );
