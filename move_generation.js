@@ -179,7 +179,8 @@ function get_all_options( board ) {
 
 module.exports = {
 	get_all_valid_options: get_all_valid_options,
-	make_move: make_move
+	make_move: make_move,
+	make_capture: make_capture
 };
 
 })();
