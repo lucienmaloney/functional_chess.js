@@ -24,11 +24,13 @@ function display_sqr( sqr ) {
 function log_board( board ) {
 	const sqr_array = R.reverse( R.transpose( R.splitEvery( 8, R.values(board.square_list))));
 	console.log("_______________________________________");
+	console.log("|                                     |");
 	const display_sublist = function( sub ) {
 		console.log("|                                     |");
 		console.log( "|", R.reduce( R.concat, "", R.map( display_sqr, sub )), "   |" );
 	}
 	R.map( display_sublist, sqr_array );
+	console.log("|                                     |");
 	console.log("_______________________________________");
 	return "\n";
 }
@@ -44,8 +46,10 @@ function play_random( board, moves ) {
 		} else {
 			new_board = MoveG.make_move( board, choice.start, choice.end );
 		}
-		play_random( new_board, moves - 1 );
+		return play_random( new_board, moves - 1 );
 	}
+	log_board( board );
+	return board;
 }
 
 module.exports = {

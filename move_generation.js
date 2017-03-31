@@ -73,10 +73,6 @@ function get_all_valid_options( board ) {
 	]);
 }
 
-function check_for_in_check( board ) {
-
-}
-
 const get_new_turn = board => Helper.get_opposite_color( board.turn );
 const get_new_fullmove = board => board.turn === "b" ? board.fullmoves + 1 : board.fullmoves;
 const get_new_halfmove = (board, start_sqr) => start_sqr.piece === "p" ? 0 : board.halfmoves + 1;
@@ -171,6 +167,12 @@ function is_square_attacked( board ) {
 
 }
 
+function check_for_in_check( board ) {
+	const captures = format_options( get_all_valid_captures(board), "capture" );
+	const king_sqr = R.filter( sqr => sqr.piece === "k" && sqr.side === Helper.get_opposite_color( board.turn ), R.values( board.square_list ));
+	return R.any( choice => choice.end === ( "" + king_sqr[0].x + king_sqr[0].y ), captures );
+}
+
 function get_all_options( board ) {
 
 }
@@ -178,7 +180,8 @@ function get_all_options( board ) {
 module.exports = {
 	get_all_valid_options: get_all_valid_options,
 	make_move: make_move,
-	make_capture: make_capture
+	make_capture: make_capture,
+	check_for_in_check: check_for_in_check
 };
 
 })();
