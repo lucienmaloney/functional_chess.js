@@ -23,11 +23,13 @@ function display_sqr( sqr ) {
 
 function log_board( board ) {
 	const sqr_array = R.reverse( R.transpose( R.splitEvery( 8, R.values(board.square_list))));
+	console.log("_______________________________________");
 	const display_sublist = function( sub ) {
-		console.log();
-		console.log( R.reduce( R.concat, "", R.map( display_sqr, sub )));
+		console.log("|                                     |");
+		console.log( "|", R.reduce( R.concat, "", R.map( display_sqr, sub )), "   |" );
 	}
 	R.map( display_sublist, sqr_array );
+	console.log("_______________________________________");
 	return "\n";
 }
 
