@@ -58,11 +58,15 @@ function get_valid_promotion( board ) {
 }
 
 function get_pawn_2_step_start_moves( board ) {
-	const new_y = board.turn === "w" ? "4" : "5";
-	const f = sqr => [(sqr.x).toString() + new_y];
-	const is_square_valid = sqr => sqr.piece === "p" && sqr.side === board.turn && (sqr.side === "w" && sqr.y === 2 || sqr.side === "b" && sqr.y === 7);
-	const squares_to_use = R.filter( is_square_valid, board.square_list );
-	return R.map( f, squares_to_use );
+	const sqr_fin = sqr => (sqr.x).toString() + (board.turn === "w" ? "4" : "5");
+	const sqr_mid = sqr => (sqr.x).toString() + (board.turn === "w" ? "3" : "6");
+	const good_piece = sqr => sqr.piece === "p" && sqr.side === board.turn;
+	const good_sqr   = sqr => (sqr.side === "w" && sqr.y === 2 || sqr.side === "b" && sqr.y === 7);
+	const good_move  = sqr => board.square_list[sqr_fin(sqr)].side === "" && board.square_list[sqr_mid(sqr)].side === "";
+
+	const squares_to_test = R.filter( s => good_piece(s) && good_sqr(s), board.square_list );
+	const squares_to_use  = R.filter( good_move, squares_to_test );
+	return R.map( s => [sqr_fin(s)], squares_to_use );
 }
 
 function get_all_valid_options( board ) {
