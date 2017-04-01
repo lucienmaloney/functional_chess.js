@@ -66,11 +66,20 @@ function get_pawn_2_step_start_moves( board ) {
 }
 
 function get_all_valid_options( board ) {
-	return R.flatten([
-		format_options( get_all_valid_moves( board ), "move" ),
-		format_options( get_pawn_2_step_start_moves( board ), "move" ),
-		format_options( get_all_valid_captures( board ), "capture" )
-	]);
+	return {
+		"move": R.flatten([ format_options( get_all_valid_moves( board ), "move" ),
+		                    format_options( get_pawn_2_step_start_moves( board ), "move" ) ]),
+		"capture": format_options( get_all_valid_captures( board ), "capture" )
+	};
+}
+
+function merge_options( option_list ) {
+	return R.flatten( R.values( option_list ));
+}
+
+function check_for_sqr_attacked( board ) {
+	const captures = format_options( get_all_valid_captures(board), "capture" );
+	return sqr => R.any( choice => choice.end === sqr, captures );
 }
 
 const get_new_turn = board => Helper.get_opposite_color( board.turn );
@@ -82,7 +91,7 @@ const get_new_en_passant = function( board, start_sqr, end_sqr ) {
 	const is_two_step_move = Math.abs(start_sqr.y - end_sqr.y) === 2;
 
 	if( is_pawn_move && is_two_step_move ) {
-		return start_sqr.x.toString() + (( start_sqr.y + end_sqr.y) / 2 );
+		return Helper.xy_to_sqr([ start_sqr.x, ( start_sqr.y + end_sqr.y) / 2 ]);
 	}
 	return NaN;
 }
@@ -168,20 +177,31 @@ function is_square_attacked( board ) {
 }
 
 function check_for_in_check( board ) {
-	const captures = format_options( get_all_valid_captures(board), "capture" );
-	const king_sqr = R.filter( sqr => sqr.piece === "k" && sqr.side === Helper.get_opposite_color( board.turn ), R.values( board.square_list ));
-	return R.any( choice => choice.end === ( "" + king_sqr[0].x + king_sqr[0].y ), captures );
+	const opp_color = Helper.get_opposite_color( board.turn );
+	const squares = R.values( board.square_list );
+	const king_sqr = R.filter( sqr => sqr.piece === "k" && sqr.side === opp_color, squares );
+	const king_coords = Helper.xy_to_sqr([ king_sqr.x, king_sqr.y ]);
+	return check_for_sqr_attacked( board )( king_coords );
 }
 
-function get_all_options( board ) {
+function generate_all_new_boards( board ) {
+	const all_options    = get_all_valid_options( board );
+	const apply_opt      = (opt, f) => f( board, opt.start, opt.end );
+	const move_boards    = R.map( opt => apply_opt( opt, make_move ), all_options.move );
+	const capture_boards = R.map( opt => apply_opt( opt, make_capture ), all_options.capture );
 
+	const all_board = R.flatten([ move_boards, capture_boards ]);
+	const new_board = apply_opt( all_options["move"][0], make_move );
+
+	return R.filter( board => !check_for_in_check( board ), all_board );
 }
 
 module.exports = {
 	get_all_valid_options: get_all_valid_options,
 	make_move: make_move,
 	make_capture: make_capture,
-	check_for_in_check: check_for_in_check
+	check_for_in_check: check_for_in_check,
+	generate_all_new_boards: generate_all_new_boards
 };
 
 })();

@@ -13,8 +13,8 @@ const output_square = function( sqr, index, outer_index, bg_1, bg_2 ) {
 	const bg = ( index + outer_index ) % 2 === 1 ? bg_1 : bg_2;
 	// 5 spaces or 2 spaces + 1 piece + 2 spaces both equal 1 square width
 	if( sqr.side === ""  ) return bg + "     \x1b[0m";
-	if( sqr.side === "w" ) return bg + `  \x1b[37m${ sqr.piece }` + bg + `  \x1b[0m`;
-	if( sqr.side === "b" ) return bg + `  \x1b[30m${ sqr.piece }` + bg + `  \x1b[0m`;
+	if( sqr.side === "w" ) return bg + `  \x1b[37m${ sqr.piece.toUpperCase() }` + bg + `  \x1b[0m`;
+	if( sqr.side === "b" ) return bg + `  \x1b[30m${ sqr.piece.toUpperCase() }` + bg + `  \x1b[0m`;
 }
 
 const output_line = function( row, index, bg_1, bg_2 ) {
@@ -41,15 +41,9 @@ function log_board( board ) {
 function play_random( board, moves ) {
 	if( moves ) {
 		log_board( board );
-		const options = MoveG.get_all_valid_options( board );
-		const choice = options[parseInt( Math.random() * options.length )];
-		var new_board = 0;
-		if( choice.type === "move" ) {
-			new_board = MoveG.make_move( board, choice.start, choice.end );
-		} else {
-			new_board = MoveG.make_move( board, choice.start, choice.end );
-		}
-		return play_random( new_board, moves - 1 );
+		const options = MoveG.generate_all_new_boards( board );
+		const choice = options[ parseInt( Math.random() * options.length ) ];
+		return play_random( choice, moves - 1 );
 	}
 	log_board( board );
 	return board;
