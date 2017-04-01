@@ -42,8 +42,9 @@ module.exports = {
 		return "" + x + y;
 	},
 
+	// Will convert any number a to [a,-a] except 0 because 0 === -0
 	plus_or_minus: function( a ) {
-		return [ -a, a ];
+		return !!a ? [ -a, a ] : [0];
 	},
 
 	inc_until_false: function( callback, condition, start = 1 ) {
@@ -72,6 +73,13 @@ module.exports = {
 			case "p": return "pawn";
 			default: throw "Invalid piece letter in letter_to_piece."
 		}
+	},
+
+	// This function takes in the board state, and returns white_callback if the board turn is white's, black_callback if black's
+	// Note that they don't necessarily have to be callbacks, they can be anything with a return value
+	switch_by_turn: function( board, white_callback, black_callback ) {
+		if( board.turn === "w" ) return white_callback;
+		if( board.turn === "b" ) return black_callback;
 	}
 }
 

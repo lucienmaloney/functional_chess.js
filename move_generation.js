@@ -176,10 +176,6 @@ function make_promotion( board, start, end ) {
 
 }
 
-function is_square_attacked( board ) {
-
-}
-
 function check_for_in_check( board ) {
 	const opp_color = Helper.get_opposite_color( board.turn );
 	const squares = R.values( board.square_list );

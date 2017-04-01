@@ -4,41 +4,50 @@
 const R      = require('ramda');
 const Helper = require('./helper');
 
+// Takes in an array of delta_x and delta_y, returns function that takes in x and y and returns array of all end positions
 const move_template = R.lift((delta_x, delta_y) => ((x,y) => [x + delta_x, y + delta_y]));
 
-function create_move_functions( delta_1, delta_2 = delta_1 ) {
-	const d1 = [ delta_1, -delta_1 ];
-	const d2 = [ delta_2, -delta_2 ];
-	if( !delta_1 && !delta_2 ) {
-		throw "A piece cannot have both delta values as 0.";
-	} else if( !delta_1 ) { // If delta_1 === 0
-		return R.concat( move_template( [0], d2 ), move_template( d2, [0] ));
-	} else if( !delta_2 ) { // If delta_2 === 0
-		return R.concat( move_template( [0], d1 ), move_template( d1, [0] ));
-	} else if( delta_1 === delta_2 ) {
-		return move_template( d1, d1 );
+function create_move_functions( delta_1, delta_2 ) {
+	if( !delta_1 && !delta_2 ) throw "A piece cannot have both delta values as 0.";
+
+	// convert to plus or minus so that all directions are covered
+	const d1 = Helper.plus_or_minus( delta_1 );
+	const d2 = Helper.plus_or_minus( delta_2 );
+
+	// If delta_1 and delta_2 are equal, they should only be crossed once, to avoid duplicates
+	if( delta_1 === delta_2 ) {
+		return move_template( d1, d2 );
 	}
 	return R.concat( move_template( d1, d2 ), move_template( d2, d1 )); 
 }
 
-function get_moves_list_from_func( func, board, x_pos, y_pos, range, only_forward ) {
+//new_coords[1] <= y_pos
+
+function get_moves_list_from_func( func, board, x_pos, y_pos, range, only_forward = false ) {
 	const new_coords = func( x_pos, y_pos );
-	if( only_forward && ( board.turn === "w" && new_coords[1] <= y_pos || board.turn === "b" && new_coords[1] >= y_pos )) {
-		return [];
+	// If the piece if only allowed to move forward, make sure it only is moving forward:
+	if( only_forward ) {
+		const white_cond = new_coords[1] <= y_pos;
+		const black_cond = new_coords[1] >= y_pos;
+		if( Helper.switch_by_turn( board, white_cond, black_cond )) return [];
 	}
+
 	const new_pos = Helper.xy_to_sqr( new_coords );
 	const valid_sqr = Helper.validate_sqr( new_pos );
-	if( Helper.validate_sqr( new_pos ) && board.square_list[new_pos].side === "" ) {
+
+	if( valid_sqr && board.square_list[new_pos].side === "" ) {
+		// Range is either bool or number. If it's a number, decrement it
 		const new_range = typeof(range) === "number" ? range - 1 : range;
 		if( !new_range ) {
 			return [new_pos];
 		}
-		return R.concat( [new_pos], get_moves_list_from_func( func, board, new_coords[0], new_coords[1], new_range ) );
+		const next_steps = get_moves_list_from_func( func, board, new_coords[0], new_coords[1], new_range );
+		return [new_pos].concat( next_steps );
 	}
 	return [];
 }
 
-function get_captures_list_from_func( func, board, x_pos, y_pos, range, only_forward ) {
+function get_captures_list_from_func( func, board, x_pos, y_pos, range, only_forward = false ) {
 	const new_coords = func( x_pos, y_pos );
 	if( only_forward && ( board.turn === "w" && new_coords[1] <= y_pos || board.turn === "b" && new_coords[1] >= y_pos )) {
 		return [];
@@ -83,11 +92,11 @@ function Piece( movement, range, capturing_movement = movement, capturing_range 
 
 module.exports = {
 	knight: new Piece( create_move_functions( 1, 2 ), false ),
-	bishop: new Piece( create_move_functions( 1    ), true  ),
+	bishop: new Piece( create_move_functions( 1, 1 ), true  ),
 	rook  : new Piece( create_move_functions( 0, 1 ), true  ),
-	queen : new Piece( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), true  ),
-	king  : new Piece( R.concat( create_move_functions( 1 ), create_move_functions( 0, 1 )), false ),
-	pawn  : new Piece( create_move_functions( 0, 1 ), false, create_move_functions( 1 ), false, true, 2 )
+	queen : new Piece( R.concat( create_move_functions( 1, 1 ), create_move_functions( 0, 1 )), true  ),
+	king  : new Piece( R.concat( create_move_functions( 1, 1 ), create_move_functions( 0, 1 )), false ),
+	pawn  : new Piece( create_move_functions( 0, 1 ), false, create_move_functions( 1, 1 ), false, true, 2 )
 }
 
 })();

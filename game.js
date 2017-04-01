@@ -50,7 +50,6 @@ function play_random( board, moves = 1 ) {
 }
 
 module.exports = {
-	log_board: log_board,
 	play_random: play_random
 }
 
