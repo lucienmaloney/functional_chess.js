@@ -38,7 +38,7 @@ function log_board( board ) {
 	console.log("\n\n");
 }
 
-function play_random( board, moves ) {
+function play_random( board, moves = 1 ) {
 	if( moves ) {
 		log_board( board );
 		const options = MoveG.generate_all_new_boards( board );

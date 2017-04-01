@@ -180,7 +180,7 @@ function check_for_in_check( board ) {
 	const opp_color = Helper.get_opposite_color( board.turn );
 	const squares = R.values( board.square_list );
 	const king_sqr = R.filter( sqr => sqr.piece === "k" && sqr.side === opp_color, squares );
-	const king_coords = Helper.xy_to_sqr([ king_sqr.x, king_sqr.y ]);
+	const king_coords = Helper.xy_to_sqr([ king_sqr[0].x, king_sqr[0].y ]);
 	return check_for_sqr_attacked( board )( king_coords );
 }
 
@@ -191,8 +191,6 @@ function generate_all_new_boards( board ) {
 	const capture_boards = R.map( opt => apply_opt( opt, make_capture ), all_options.capture );
 
 	const all_board = R.flatten([ move_boards, capture_boards ]);
-	const new_board = apply_opt( all_options["move"][0], make_move );
-
 	return R.filter( board => !check_for_in_check( board ), all_board );
 }
 
