@@ -35,7 +35,7 @@ function test_for_forward_only( board, forward_bool, yi, yf ) {
 function get_moves_list_from_func( func, board, x_pos, y_pos, range, only_forward = false ) {
 	const new_coords = func( x_pos, y_pos );
 	
-	if( test_for_forward_only( only_forward, y_pos, new_coords[1] )) return [];
+	if( test_for_forward_only( board, only_forward, y_pos, new_coords[1] )) return [];
 
 	const new_pos = Helper.xy_to_sqr( new_coords );
 	const valid_sqr = Helper.validate_sqr( new_pos );
