@@ -84,7 +84,17 @@ function get_valid_castling( board ) {
 }
 
 function get_valid_en_passant( board ) {
-
+	if( board.en_passant ) {
+		const end_sqr = board.square_list[ board.en_passant ];
+		const delta_y = board.turn === "w" ? y => y - 1 : y => y + 1;
+		const sqr_1   = "" + (end_sqr.x - 1) + delta_y( end_sqr.y );
+		const sqr_2   = "" + (end_sqr.x + 1) + delta_y( end_sqr.y );
+		const valid_s = R.filter( s => Helper.validate_sqr( parseInt( s )), [sqr_1, sqr_2] );
+		const is_pawn = s => board.square_list[s].piece === "p";
+		const is_side = s => board.square_list[s].side  === board.turn;
+		return R.filter( s => is_pawn(s) && is_side(s), valid_s );
+	}
+	return [];
 }
 
 function get_valid_promotion( board ) {
@@ -249,7 +259,6 @@ function check_for_in_check( board ) {
 
 function generate_all_new_boards( board ) {
 	const all_options    = get_all_valid_options( board );
-	console.log( all_options );
 	const apply_opt      = (opt, f) => f( board, opt.start, opt.end );
 	const move_boards    = R.map( opt => apply_opt( opt, make_move ), all_options.move );
 	const capture_boards = R.map( opt => apply_opt( opt, make_capture ), all_options.capture );
