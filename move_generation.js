@@ -80,9 +80,7 @@ function get_valid_castling( board ) {
 	const q_side = board.turn === "w" ? "Q" : "q";
 	const k_side_castle = test_king_side_castle( board, k_side, y );
 	const q_side_castle = test_queen_side_castle( board, q_side, y );
-	const result = R.flatten( k_side_castle, q_side_castle );
-	console.log( result );
-	return result;
+	return R.flatten([ k_side_castle, q_side_castle ]);
 }
 
 function get_valid_en_passant( board ) {
@@ -109,7 +107,8 @@ function get_all_valid_options( board ) {
 	return {
 		"move": R.flatten([ format_options( get_all_valid_moves( board ), "move" ),
 		                    format_options( get_pawn_2_step_start_moves( board ), "move" ) ]),
-		"capture": format_options( get_all_valid_captures( board ), "capture" )
+		"capture": format_options( get_all_valid_captures( board ), "capture" ),
+		"castle": get_valid_castling( board )
 	};
 }
 
@@ -169,6 +168,30 @@ const get_new_board_array_from_move = function( board, start, end ) {
 	return R.set( R.lensProp(end), new_end, R.set( R.lensProp(start), new_start, sqr_obj ));
 }
 
+function get_new_board_array_from_castle( board, letter, y ) {
+	const inty = parseInt(y);
+	if( R.toUpper( letter ) === "Q" ) {
+		const old_king = new Square( "", " ", 5, inty );
+		const old_rook = new Square( "", " ", 1, inty );
+		const new_king = new Square( board.turn, "k", 3, inty );
+		const new_rook = new Square( board.turn, "r", 4, inty );
+		return R.set( R.lensProp( "5" + y ), old_king,
+		       R.set( R.lensProp( "1" + y ), old_rook,
+		       R.set( R.lensProp( "3" + y ), new_king,
+		       R.set( R.lensProp( "4" + y ), new_rook, board.square_list ))));
+	} else if( R.toUpper( letter ) === "K" ) {
+		const old_king = new Square( "", " ", 5, inty );
+		const old_rook = new Square( "", " ", 8, inty );
+		const new_king = new Square( board.turn, "k", 7, inty );
+		const new_rook = new Square( board.turn, "r", 6, inty );
+		return R.set( R.lensProp( "5" + y ), old_king,
+		       R.set( R.lensProp( "8" + y ), old_rook,
+		       R.set( R.lensProp( "7" + y ), new_king,
+		       R.set( R.lensProp( "6" + y ), new_rook, board.square_list ))));
+	}
+	throw "A castling move was attempted with an invalid letter input.";
+}
+
 function make_move( board, start, end ) {
 	const start_sqr = board.square_list[start];
 	const end_sqr   = board.square_list[end];
@@ -196,7 +219,16 @@ function make_capture( board, start, end ) {
 }
 
 function make_castling( board, letter ) {
+	const y = letter === R.toUpper( letter ) ? "1" : "8";
+	const castle_regex = letter === R.toUpper( letter ) ? /KQ/ : /kq/;
+	const new_sqr_arr    = get_new_board_array_from_castle( board, letter, y );
+	const new_turn       = get_new_turn( board );
+	const new_castling   = R.replace( castle_regex, "", board.castling );
+	const new_en_passant = NaN;
+	const new_halfmoves  = board.halfmoves + 1;
+	const new_fullmoves  = get_new_fullmove( board );
 
+	return new Board( new_sqr_arr, new_turn, new_castling, new_en_passant, new_halfmoves, new_fullmoves );
 }
 
 function make_en_passant( board, start, end ) {
@@ -217,13 +249,13 @@ function check_for_in_check( board ) {
 
 function generate_all_new_boards( board ) {
 	const all_options    = get_all_valid_options( board );
+	console.log( all_options );
 	const apply_opt      = (opt, f) => f( board, opt.start, opt.end );
 	const move_boards    = R.map( opt => apply_opt( opt, make_move ), all_options.move );
 	const capture_boards = R.map( opt => apply_opt( opt, make_capture ), all_options.capture );
+	const castle_boards  = R.map( opt => make_castling( board, opt ), all_options.castle );
 
-	const all_board = R.flatten([ move_boards, capture_boards ]);
-	console.log( board.castling );
-	get_valid_castling( board );
+	const all_board = R.flatten([ move_boards, capture_boards, castle_boards ]);
 	return R.filter( board => !check_for_in_check( board ), all_board );
 }
 
