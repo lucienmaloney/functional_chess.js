@@ -21,16 +21,21 @@ function create_move_functions( delta_1, delta_2 ) {
 	return R.concat( move_template( d1, d2 ), move_template( d2, d1 )); 
 }
 
-//new_coords[1] <= y_pos
+// If the piece if only allowed to move forward, make sure it only is moving forward:
+// Return true if breaking rule, false otherwise
+function test_for_forward_only( board, forward_bool, yi, yf ) {
+	if( forward_bool ) {
+		const white_cond = yf <= yi;
+		const black_cond = yf >= yi;
+		if( Helper.switch_by_turn( board, white_cond, black_cond )) return true;
+	}
+	return false;
+}
 
 function get_moves_list_from_func( func, board, x_pos, y_pos, range, only_forward = false ) {
 	const new_coords = func( x_pos, y_pos );
-	// If the piece if only allowed to move forward, make sure it only is moving forward:
-	if( only_forward ) {
-		const white_cond = new_coords[1] <= y_pos;
-		const black_cond = new_coords[1] >= y_pos;
-		if( Helper.switch_by_turn( board, white_cond, black_cond )) return [];
-	}
+	
+	if( test_for_forward_only( only_forward, y_pos, new_coords[1] )) return [];
 
 	const new_pos = Helper.xy_to_sqr( new_coords );
 	const valid_sqr = Helper.validate_sqr( new_pos );
@@ -49,13 +54,15 @@ function get_moves_list_from_func( func, board, x_pos, y_pos, range, only_forwar
 
 function get_captures_list_from_func( func, board, x_pos, y_pos, range, only_forward = false ) {
 	const new_coords = func( x_pos, y_pos );
-	if( only_forward && ( board.turn === "w" && new_coords[1] <= y_pos || board.turn === "b" && new_coords[1] >= y_pos )) {
-		return [];
-	}
+
+	if( test_for_forward_only( board, only_forward, y_pos, new_coords[1] )) return [];
+
 	const new_pos = Helper.xy_to_sqr( new_coords );
 	const valid_sqr = Helper.validate_sqr( new_pos );
+
 	if( valid_sqr ) {
 		const new_pos_side = board.square_list[new_pos].side;
+		// Range is either bool or number. If it's a number, decrement it
 		const new_range = typeof(range) === "number" ? range - 1 : range;
 		if( new_pos_side === "" && new_range ) {
 			return get_captures_list_from_func( func, board, new_coords[0], new_coords[1], new_range );
@@ -66,6 +73,8 @@ function get_captures_list_from_func( func, board, x_pos, y_pos, range, only_for
 	return [];
 }
 
+// Create moves takes in function_list, range, and only_forward and combines them into a new function
+// The return function takes in board, x, and y, and can be used to generate all possible moves at that possition
 function create_moves( function_list, range, only_forward = false ) {
 	return function( board, x, y ) {
 		const make_moves = f => get_moves_list_from_func( f, board, x, y, range, only_forward );
@@ -80,14 +89,15 @@ function create_captures( function_list, range, only_forward = false ) {
 	}
 }
 
-// Movement is the list of functions about how a piece can move
-// Range is whether the piece stops after one step or keeps going until hitting a wall or a piece
-// Capturing_movement is the list of function denoting how the piece captures. 
-// Capturing_movement is the same as movement for all pieces except the pawn
+// Movement is the list of functions which can be thought of as rays about how the piece moves
+// Range is whether the piece stops after one step, n-number steps, or doesn't stop until hitting a wall or piece
+// Capturing_movement are the functions about how pieces capture (same as movement for every piece except pawn)
 // Ditto for capturing_range
+// Only forward describes that a piece can only move forward (like the pawn)
 function Piece( movement, range, capturing_movement = movement, capturing_range = range, only_forward = false ) {
-	this.get_moves       = create_moves( movement, range, only_forward );
-	this.get_captures    = create_captures( capturing_movement, capturing_range, only_forward );
+	// Each piece has two methods. One to get its movement at a square and another to get its capturing movement
+	this.get_moves    = create_moves( movement, range, only_forward );
+	this.get_captures = create_captures( capturing_movement, capturing_range, only_forward );
 }
 
 module.exports = {
@@ -96,7 +106,7 @@ module.exports = {
 	rook  : new Piece( create_move_functions( 0, 1 ), true  ),
 	queen : new Piece( R.concat( create_move_functions( 1, 1 ), create_move_functions( 0, 1 )), true  ),
 	king  : new Piece( R.concat( create_move_functions( 1, 1 ), create_move_functions( 0, 1 )), false ),
-	pawn  : new Piece( create_move_functions( 0, 1 ), false, create_move_functions( 1, 1 ), false, true, 2 )
+	pawn  : new Piece( create_move_functions( 0, 1 ), false, create_move_functions( 1, 1 ), false, true )
 }
 
 })();
