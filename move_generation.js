@@ -118,7 +118,8 @@ function get_all_valid_options( board ) {
 		"move": R.flatten([ format_options( get_all_valid_moves( board ), "move" ),
 		                    format_options( get_pawn_2_step_start_moves( board ), "move" ) ]),
 		"capture": format_options( get_all_valid_captures( board ), "capture" ),
-		"castle": get_valid_castling( board )
+		"castle": get_valid_castling( board ),
+		"en_passant": get_valid_en_passant( board )
 	};
 }
 
@@ -202,6 +203,20 @@ function get_new_board_array_from_castle( board, letter, y ) {
 	throw "A castling move was attempted with an invalid letter input.";
 }
 
+function get_new_board_array_from_en_passant( board, start ) {
+	const end_int   = parseInt( board.en_passant );
+	const end_str   = board.en_passant.toString();
+	const pass_num  = (board.turn === "w" ? end_int - 1 : end_int + 1 ).toString();
+	const start_sqr = board.square_list[ start ];
+	const new_start = new Square( "", " ", start_sqr.x, start_sqr.y );
+	const pass_sqr  = board.square_list[ pass_num ];
+	const dead_pawn = new Square( "", " ", pass_sqr.x, pass_sqr.y );
+	const new_end   = new Square( start_sqr.side, "p", parseInt(end_str[0]), parseInt(end_str[1]));
+	return R.set( R.lensProp( "" + start_sqr.x + start_sqr.y ), new_start, 
+		   R.set( R.lensProp( pass_num ), dead_pawn,
+		   R.set( R.lensProp( end_int.toString() ), new_end, board.square_list )));  
+}
+
 function make_move( board, start, end ) {
 	const start_sqr = board.square_list[start];
 	const end_sqr   = board.square_list[end];
@@ -241,8 +256,15 @@ function make_castling( board, letter ) {
 	return new Board( new_sqr_arr, new_turn, new_castling, new_en_passant, new_halfmoves, new_fullmoves );
 }
 
-function make_en_passant( board, start, end ) {
+function make_en_passant( board, start ) {
+	const new_sqr_arr    = get_new_board_array_from_en_passant( board, start );
+	const new_turn       = get_new_turn( board );
+	const new_castling   = board.castling;
+	const new_en_passant = NaN;
+	const new_halfmoves  = 0;
+	const new_fullmoves  = get_new_fullmove( board ); 
 
+	return new Board( new_sqr_arr, new_turn, new_castling, new_en_passant, new_halfmoves, new_fullmoves );
 }
 
 function make_promotion( board, start, end ) {
@@ -258,13 +280,14 @@ function check_for_in_check( board ) {
 }
 
 function generate_all_new_boards( board ) {
-	const all_options    = get_all_valid_options( board );
-	const apply_opt      = (opt, f) => f( board, opt.start, opt.end );
-	const move_boards    = R.map( opt => apply_opt( opt, make_move ), all_options.move );
-	const capture_boards = R.map( opt => apply_opt( opt, make_capture ), all_options.capture );
-	const castle_boards  = R.map( opt => make_castling( board, opt ), all_options.castle );
+	const all_options       = get_all_valid_options( board );
+	const apply_opt         = (opt, f) => f( board, opt.start, opt.end );
+	const move_boards       = R.map( opt => apply_opt( opt, make_move ), all_options.move );
+	const capture_boards    = R.map( opt => apply_opt( opt, make_capture ), all_options.capture );
+	const castle_boards     = R.map( opt => make_castling( board, opt ), all_options.castle );
+	const en_passant_boards = R.map( opt => make_en_passant( board, opt ), all_options.en_passant );
 
-	const all_board = R.flatten([ move_boards, capture_boards, castle_boards ]);
+	const all_board = R.flatten([ move_boards, capture_boards, castle_boards, en_passant_boards ]);
 	return R.filter( board => !check_for_in_check( board ), all_board );
 }
 
