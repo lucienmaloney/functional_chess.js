@@ -45,8 +45,44 @@ function get_all_valid_captures( board ) {
 	return R.map( f => f( "get_captures", board ), function_list );
 }
 
-function get_valid_castling( board ) {
+function check_for_sqr_attacked( board ) {
+	const captures = format_options( get_all_valid_captures(board), "capture" );
+	return sqr => R.any( choice => choice.end === sqr, captures );
+}
 
+function test_king_side_castle( board, k, y ) {
+	if( R.any( l => l === k, board.castling )) {
+		const sqrs        = board.square_list;
+		const opp_board   = R.set( R.lensProp('turn'), Helper.get_opposite_color( board.turn ), board );
+		const sqr_bool    = sqrs["6"+y].side === "" && sqrs["7"+y].side === "";
+		const check_check = check_for_sqr_attacked( opp_board );
+		const in_check    = check_check("5"+y) || check_check("6"+y) || check_check("7"+y);
+		if( sqr_bool && !in_check ) return [k];
+	}
+	return [];
+}
+
+function test_queen_side_castle( board, q, y ) {
+	if( R.any( l => l === q, board.castling )) {
+		const sqrs        = board.square_list;
+		const opp_board   = R.set( R.lensProp('turn'), Helper.get_opposite_color( board.turn ), board );
+		const sqr_bool    = sqrs["2"+y].side === "" && sqrs["3"+y].side === "" && sqrs["4"+y].side === "";
+		const check_check = check_for_sqr_attacked( opp_board );
+		const in_check    = check_check("3"+y) || check_check("4"+y) || check_check("5"+y);
+		if( sqr_bool && !in_check ) return [q]; 
+	}
+	return [];
+}
+
+function get_valid_castling( board ) {
+	const y      = board.turn === "w" ? "1" : "8";
+	const k_side = board.turn === "w" ? "K" : "k";
+	const q_side = board.turn === "w" ? "Q" : "q";
+	const k_side_castle = test_king_side_castle( board, k_side, y );
+	const q_side_castle = test_queen_side_castle( board, q_side, y );
+	const result = R.flatten( k_side_castle, q_side_castle );
+	console.log( result );
+	return result;
 }
 
 function get_valid_en_passant( board ) {
@@ -79,11 +115,6 @@ function get_all_valid_options( board ) {
 
 function merge_options( option_list ) {
 	return R.flatten( R.values( option_list ));
-}
-
-function check_for_sqr_attacked( board ) {
-	const captures = format_options( get_all_valid_captures(board), "capture" );
-	return sqr => R.any( choice => choice.end === sqr, captures );
 }
 
 const get_new_turn = board => Helper.get_opposite_color( board.turn );
@@ -164,7 +195,7 @@ function make_capture( board, start, end ) {
 	return new Board( new_sqr_arr, new_turn, new_castling, new_en_passant, new_halfmoves, new_fullmoves );
 }
 
-function make_castling( board, start, end ) {
+function make_castling( board, letter ) {
 
 }
 
@@ -191,6 +222,8 @@ function generate_all_new_boards( board ) {
 	const capture_boards = R.map( opt => apply_opt( opt, make_capture ), all_options.capture );
 
 	const all_board = R.flatten([ move_boards, capture_boards ]);
+	console.log( board.castling );
+	get_valid_castling( board );
 	return R.filter( board => !check_for_in_check( board ), all_board );
 }
 
