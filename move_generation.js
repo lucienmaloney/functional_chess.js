@@ -97,10 +97,6 @@ function get_valid_en_passant( board ) {
 	return [];
 }
 
-function get_valid_promotion( board ) {
-
-}
-
 function get_pawn_2_step_start_moves( board ) {
 	const sqr_fin = sqr => (sqr.x).toString() + (board.turn === "w" ? "4" : "5");
 	const sqr_mid = sqr => (sqr.x).toString() + (board.turn === "w" ? "3" : "6");
@@ -267,8 +263,23 @@ function make_en_passant( board, start ) {
 	return new Board( new_sqr_arr, new_turn, new_castling, new_en_passant, new_halfmoves, new_fullmoves );
 }
 
-function make_promotion( board, start, end ) {
-
+function update_list_for_promotion( all_boards ) {
+	const is_good_pawn  = sqr => sqr.piece === "p" && (sqr.side === "w" && sqr.y === 8) || (sqr.side === "b" && sqr.y === 1);
+	const has_promotion = board => R.any( is_good_pawn, R.values( board.square_list ));
+	function create_promo_boards( board ) {
+		if( !has_promotion( board )) {
+			return board;
+		}
+		const p_sqr   = (R.filter( is_good_pawn, board.square_list ));
+		const p_key   = R.keys( p_sqr )[0];
+		const p_val   = p_sqr[p_key];
+		const p_lens  = R.lensPath([ "square_list", p_key ]);
+		const p_set   = sqr => R.set( p_lens, sqr, board );
+		const p_piece = piece => new Square( p_val.side, piece, p_val.x, p_val.y );
+		const new_squares = R.map( p_piece, ["q","r","b","n"] );
+		return R.map( p_set, new_squares );
+	}
+	return R.flatten( R.map( create_promo_boards, all_boards ));
 }
 
 function check_for_in_check( board ) {
@@ -288,7 +299,8 @@ function generate_all_new_boards( board ) {
 	const en_passant_boards = R.map( opt => make_en_passant( board, opt ), all_options.en_passant );
 
 	const all_board = R.flatten([ move_boards, capture_boards, castle_boards, en_passant_boards ]);
-	return R.filter( board => !check_for_in_check( board ), all_board );
+	const check_filtered_boards = R.filter( board => !check_for_in_check( board ), all_board );
+	return update_list_for_promotion( check_filtered_boards );
 }
 
 module.exports = {
