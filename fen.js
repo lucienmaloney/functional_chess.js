@@ -94,6 +94,20 @@ module.exports = {
 		} else {
 			throw "The fen provided is not valid.";
 		}
+	},
+
+	create_sqr_string_from_board: function( sqrs ) {
+		const f = sqr => sqr.side === "w" ? sqr.piece.toUpperCase() : sqr.piece;
+		const sep_list   = R.splitEvery( 8, R.join( "", R.map( f, sqrs )));
+		const form_list  = R.flatten( R.intersperse( "/", R.reverse( R.transpose( sep_list ))));
+		const spaced_out = R.groupWith( (a,b) => a === " " && b === " ", form_list );
+		return R.join( "", R.map( l => l[0] === " " ? l.length : l[0], spaced_out ));
+	},
+
+	get_fen_from_board: function( board ) {
+		const fen_sqr_str = module.exports.create_sqr_string_from_board( R.values( board.square_list ));
+		const en_passant  = board.en_passant ? Helper.int_to_letter_sqr( board.en_passant ) : "-";
+		return R.join( " ", [fen_sqr_str, board.turn, board.castling, en_passant, board.halfmoves, board.fullmoves] );
 	}
 
 }

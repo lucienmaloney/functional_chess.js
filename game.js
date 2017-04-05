@@ -4,6 +4,7 @@
 const R      = require('ramda');
 const MoveG  = require('./move_generation');
 const Helper = require('./helper');
+const FEN    = require('./fen');
 
 const map_indexed = R.addIndex( R.map );
 
@@ -76,6 +77,7 @@ function end_game( board, game_state ) {
 
 function play_random( board, moves = 1 ) {
 	if( moves ) {
+		console.log( FEN.get_fen_from_board( board ));
 		log_board( board );
 		const options = MoveG.generate_all_new_boards( board );
 		const game_state = test_for_game_end( board, options );

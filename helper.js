@@ -29,6 +29,12 @@ module.exports = {
 		return module.exports.parse_chess_square( R.replace( letters, alpharray[letters], sqr ));
 	},
 
+	int_to_letter_sqr: function( int_sqr ) {
+		const int_str = int_sqr.toString()
+		const alpharray = ["","a","b","c","d","e","f","g","h"];
+		return alpharray[ parseInt( int_str[0] ) ] + parseInt( int_str[1] );
+	},
+
 	// Squares should fall into sequence: 11,12,13,14,15,16,17,18, 21,22,23,24,25,26,27,28, 31,32... ...86,87,88
 	validate_sqr: function( sqr ) {
 		return (sqr > 10 && sqr < 89 && sqr % 10 !== 0 && sqr % 10 !== 9);

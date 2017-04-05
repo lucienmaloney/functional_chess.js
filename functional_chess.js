@@ -13,6 +13,6 @@ const MoveG  = require('./move_generation');
 
 const chess_board = FEN.get_board_from_fen( init_fen );
 
-Game.play_random( chess_board, 100 );
+Game.play_random( chess_board, 10 );
 
-})( "4k1b1/8/8/8/8/8/8/2B1KB2 b kq - 0 1" );
+})( "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" );
