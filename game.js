@@ -76,22 +76,36 @@ function end_game( board, game_state ) {
 	console.log( game_state );
 }
 
-function play_random( board, moves = 1, fen_list = [] ) {
-	if( moves ) {
-		const new_fen_list = R.concat( fen_list, [FEN.get_fen_from_board( board )]);
+// Choose a random move from the options and return it:
+function play_random( opt_list ) {
+	return opt_list[ parseInt( Math.random() * opt_list.length ) ];
+}
+
+// Move limit by default is set to 1, allowing only 1 move before the program stops
+// Setting the move_limit to a negative number allows for unlimited moves (until a game ending condition is met)
+function play_game( board, move_limit = 1, algorithm_cb = play_random, fen_list = [] ) {
+	if( move_limit ) {
 		log_board( board );
+
+		// Generate the complete list of following board states from legal moves and choose one
 		const options = MoveG.generate_all_new_boards( board );
+		const choice = algorithm_cb( options );
+
+		// Check for if the game is over in any way: 
+		// FEN list is needed to test for threefold repetition and to keep track of changes to undo
+		const new_fen_list = R.concat( fen_list, [FEN.get_fen_from_board( board )]);
 		const game_state = test_for_game_end( board, options, new_fen_list );
 		if( game_state ) return end_game( board, game_state );
-		const choice = options[ parseInt( Math.random() * options.length ) ];
-		return play_random( choice, moves - 1, new_fen_list );
+
+		return play_game( choice, move_limit - 1, algorithm_cb, new_fen_list );
 	}
+	// These lines only run if the maximum move limit is exceeded:
 	log_board( board );
 	return board;
 }
 
 module.exports = {
-	play_random: play_random
+	play_game: play_game
 }
 
 })();
