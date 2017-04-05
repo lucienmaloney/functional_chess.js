@@ -39,7 +39,8 @@ module.exports = {
 	// A valid castling string should contain just the letters "q" "Q" "k" and "K" either once or zero times
 	// Replacing each of these letters with an empty char should yield an empty string in a valid castle_str
 	validate_castle_str: function( str ) {
-		return "" === R.replace("q","",R.replace("Q","",R.replace("k","",R.replace("K","", str ))));
+		return "" === R.replace("q","",R.replace("Q","",R.replace("k","",R.replace("K","", str )))) ||
+		       "" === R.replace("-", "", str);
 	},
 
 	// value of en_passant should either be a valid square, or if no en_passant is possible than NaN

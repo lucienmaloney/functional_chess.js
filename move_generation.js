@@ -74,6 +74,8 @@ function test_queen_side_castle( board, q, y ) {
 	return [];
 }
 
+// Note: get_valid_castling assumes the provided castling details in the FEN were valid. If they weren't valid,
+// duplicate kings and rooks can spontaneously appear in the middle of a game (maybe change this?)
 function get_valid_castling( board ) {
 	const y      = board.turn === "w" ? "1" : "8";
 	const k_side = board.turn === "w" ? "K" : "k";
@@ -264,7 +266,7 @@ function make_en_passant( board, start ) {
 }
 
 function update_list_for_promotion( all_boards ) {
-	const is_good_pawn  = sqr => sqr.piece === "p" && (sqr.side === "w" && sqr.y === 8) || (sqr.side === "b" && sqr.y === 1);
+	const is_good_pawn  = sqr => sqr.piece === "p" && ((sqr.side === "w" && sqr.y === 8) || (sqr.side === "b" && sqr.y === 1));
 	const has_promotion = board => R.any( is_good_pawn, R.values( board.square_list ));
 	function create_promo_boards( board ) {
 		if( !has_promotion( board )) {

@@ -1,8 +1,9 @@
 (function() {
 'use strict';
 
-const R     = require('ramda');
-const MoveG = require('./move_generation');
+const R      = require('ramda');
+const MoveG  = require('./move_generation');
+const Helper = require('./helper');
 
 const map_indexed = R.addIndex( R.map );
 
@@ -38,10 +39,47 @@ function log_board( board ) {
 	console.log("\n\n");
 }
 
+function determine_insufficient_material( board ) {
+	const squares    = R.values( board.square_list );
+	const filtered   = R.filter( s => s.side !== "", squares );
+	const len        = filtered.length;
+	const any_knight = R.any( s => s.piece === "n", filtered );
+	const any_bishop = R.any( s => s.piece === "b", filtered );
+	const w_bishop   = R.filter( s => s.piece === "b" && s.side === "w", filtered );
+	const b_bishop   = R.filter( s => s.piece === "b" && s.side === "b", filtered );
+	const not_enough = len === 2 || (len === 3 && (any_bishop || any_knight));
+	if( w_bishop.length === 1 && b_bishop.length === 1 && len === 4 ) {
+		return ((w_bishop[0].x + w_bishop[0].y) % 2 === (b_bishop[0].x + b_bishop[0].y) % 2) || not_enough;
+	}
+	return not_enough;
+}
+
+function detect_3_repetition( board ) {
+
+}
+
+function test_for_game_end( board, options ) {
+	if( !options.length ) {
+		const opp_board = R.set( R.lensProp("turn"), Helper.get_opposite_color( board.turn ), board );
+		if( MoveG.check_for_in_check( opp_board )) return "Checkmate";
+		return "Stalemate";
+	}
+	if( board.halfmoves >= 100 ) return "50 Move Rule";
+	if( detect_3_repetition( board )) return "3-fold Repetition";
+	if( determine_insufficient_material( board )) return "Insufficient Material";
+	return "";
+}
+
+function end_game( board, game_state ) {
+	console.log( game_state );
+}
+
 function play_random( board, moves = 1 ) {
 	if( moves ) {
 		log_board( board );
 		const options = MoveG.generate_all_new_boards( board );
+		const game_state = test_for_game_end( board, options );
+		if( game_state ) return end_game( board, game_state );
 		const choice = options[ parseInt( Math.random() * options.length ) ];
 		return play_random( choice, moves - 1 );
 	}
