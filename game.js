@@ -55,19 +55,20 @@ function determine_insufficient_material( board ) {
 	return not_enough;
 }
 
-function detect_3_repetition( board ) {
-
+function detect_3_repetition( fen_list ) {
+	const counted = R.countBy( l => l.slice( 0, -3 ))( fen_list );
+	return R.any( v => v >= 3, R.values( counted ));
 }
 
-function test_for_game_end( board, options ) {
+function test_for_game_end( board, options, fen_list ) {
 	if( !options.length ) {
 		const opp_board = R.set( R.lensProp("turn"), Helper.get_opposite_color( board.turn ), board );
 		if( MoveG.check_for_in_check( opp_board )) return "Checkmate";
 		return "Stalemate";
 	}
 	if( board.halfmoves >= 100 ) return "50 Move Rule";
-	if( detect_3_repetition( board )) return "3-fold Repetition";
 	if( determine_insufficient_material( board )) return "Insufficient Material";
+	if( detect_3_repetition( fen_list )) return "3-fold Repetition";
 	return "";
 }
 
@@ -75,15 +76,15 @@ function end_game( board, game_state ) {
 	console.log( game_state );
 }
 
-function play_random( board, moves = 1 ) {
+function play_random( board, moves = 1, fen_list = [] ) {
 	if( moves ) {
-		console.log( FEN.get_fen_from_board( board ));
+		const new_fen_list = R.concat( fen_list, [FEN.get_fen_from_board( board )]);
 		log_board( board );
 		const options = MoveG.generate_all_new_boards( board );
-		const game_state = test_for_game_end( board, options );
+		const game_state = test_for_game_end( board, options, new_fen_list );
 		if( game_state ) return end_game( board, game_state );
 		const choice = options[ parseInt( Math.random() * options.length ) ];
-		return play_random( choice, moves - 1 );
+		return play_random( choice, moves - 1, new_fen_list );
 	}
 	log_board( board );
 	return board;
