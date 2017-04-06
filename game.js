@@ -34,7 +34,7 @@ const output_line = function( row, index, bg_1, bg_2 ) {
 function log_board( board ) {
 	// sqr_array splits up the board into its rows so the rows can be mapped over and logged
 	const sqr_array = R.reverse( R.transpose( R.splitEvery( 8, R.values( board.square_list ))));
-	const bg_1 = "\x1b[41m"; // Red, because it contrasts with both the black and white pieces
+	const bg_1 = "\x1b[41m"; // Red, because it contrasts with both the black and white pieces and the blue console
 	const bg_2 = "\x1b[42m"; // Green, for the same reason
 	map_indexed(( val, idx ) => output_line( val, idx, bg_1, bg_2 ), sqr_array );
 	console.log("\n\n");
@@ -42,27 +42,35 @@ function log_board( board ) {
 
 function determine_insufficient_material( board ) {
 	const squares    = R.values( board.square_list );
-	const filtered   = R.filter( s => s.side !== "", squares );
+	const filtered   = R.filter( s => s.side !== "", squares ); // Get all squares with pieces in them
 	const len        = filtered.length;
-	const any_knight = R.any( s => s.piece === "n", filtered );
-	const any_bishop = R.any( s => s.piece === "b", filtered );
-	const w_bishop   = R.filter( s => s.piece === "b" && s.side === "w", filtered );
-	const b_bishop   = R.filter( s => s.piece === "b" && s.side === "b", filtered );
+	const any_knight = R.any( s => s.piece === "n", filtered ); // Any piece is a knight
+	const any_bishop = R.any( s => s.piece === "b", filtered ); // Any piece is a bishop
+	const w_bishop   = R.filter( s => s.piece === "b" && s.side === "w", filtered ); // All the white bishops
+	const b_bishop   = R.filter( s => s.piece === "b" && s.side === "b", filtered ); // All the black bishops
+	// Four cases to check against to determine if there is insufficient material: 
+	// King vs King, King vs King + Knight, King vs King + Bishop, King + Bishop vs King + Bishop where bishops are the same color
+	// There are many other piece arrangements that don't have forced mates, but only in these four is mate impossible
 	const not_enough = len === 2 || (len === 3 && (any_bishop || any_knight));
 	if( w_bishop.length === 1 && b_bishop.length === 1 && len === 4 ) {
+		// Check to see that that the two bishops share the same color:
 		return ((w_bishop[0].x + w_bishop[0].y) % 2 === (b_bishop[0].x + b_bishop[0].y) % 2) || not_enough;
 	}
 	return not_enough;
 }
 
 function detect_3_repetition( fen_list ) {
-	const counted = R.countBy( l => l.slice( 0, -3 ))( fen_list );
+	// Regex to delete everything after a space followed by a digit is encountered
+	// This is to remove halfmoves and fullmoves, which aren't used in finding threefold repetition
+	const counted = R.countBy( l => R.replace( / \d.*$/, "", l ))( fen_list );
 	return R.any( v => v >= 3, R.values( counted ));
 }
 
 function test_for_game_end( board, options, fen_list ) {
+	// If there are no possible moves:
 	if( !options.length ) {
 		const opp_board = R.set( R.lensProp("turn"), Helper.get_opposite_color( board.turn ), board );
+		// If in check then checkmate, else stalemate
 		if( MoveG.check_for_in_check( opp_board )) return "Checkmate";
 		return "Stalemate";
 	}
@@ -72,6 +80,8 @@ function test_for_game_end( board, options, fen_list ) {
 	return "";
 }
 
+// This function currently logs how the game ended
+// Future uses for this function might be returning the game points or returning the full pgn list or analyzing the game
 function end_game( board, game_state ) {
 	console.log( game_state );
 }
