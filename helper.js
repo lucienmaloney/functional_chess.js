@@ -88,6 +88,10 @@ module.exports = {
 	switch_by_turn: function( board, white_callback, black_callback ) {
 		if( board.turn === "w" ) return white_callback;
 		if( board.turn === "b" ) return black_callback;
+	},
+
+	get_side: function( board, sqr ) {
+		return board.square_list[sqr].side;
 	}
 }
 

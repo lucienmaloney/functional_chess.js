@@ -8,6 +8,14 @@ const Game   = require('./game');
 const Square = require('./square');
 const Board  = require('./board');
 
+// Object containing the start and end square, as well as the move type (move or capture)
+function Choice( start, end, type ) {
+	this.start = start;
+	this.end = end;
+	this.type = type;
+}
+
+// Doesn't actually apply_f_to_square, it returns a function that can be used to apply
 function apply_f_to_square( sqr ) {
 	if( sqr.side === "" ) {
 		throw "Cannot use function apply_f_to_square on a square with no piece in it: " + sqr.x + sqr.y;
@@ -16,12 +24,7 @@ function apply_f_to_square( sqr ) {
 	return ( f, board ) => Move[piece][f]( board, sqr.x, sqr.y );
 }
 
-function Choice( start, end, type ) {
-	this.start = start;
-	this.end = end;
-	this.type = type;
-}
-
+// Turn the object filled with start square keys that point to an array of end squares into a neat object of Choice objects
 function format_options( opt_list, opt_type ) {
 	const sqr_to_pairs = (val, key, obj) => R.map( v => new Choice( key, v, opt_type ), val );
 	const pair_obj = R.mapObjIndexed( sqr_to_pairs, opt_list );
@@ -36,8 +39,7 @@ function apply_to_all_squares( board ) {
 
 function get_all_valid_moves( board ) {
 	const function_list = apply_to_all_squares( board );
-	const valid_moves = R.map( f => f( "get_moves", board ), function_list );
-	return valid_moves;
+	return R.map( f => f( "get_moves", board ), function_list );
 }
 
 function get_all_valid_captures( board ) {
@@ -45,38 +47,50 @@ function get_all_valid_captures( board ) {
 	return R.map( f => f( "get_captures", board ), function_list );
 }
 
+// Returns function that takes in sqr and returns true if it is attacked
+// Note: if it was white's turn this would check if white is attacking a square, not black (see the next function)
 function check_for_sqr_attacked( board ) {
 	const captures = format_options( get_all_valid_captures(board), "capture" );
 	return sqr => R.any( choice => choice.end === sqr, captures );
 }
 
+// Same as previous function, but checks if the opposing side is attacking a square
+function check_for_sqr_attacked_by_opp_color( board ) {
+	const opp_board = R.set( R.lensProp('turn'), Helper.get_opposite_color( board.turn ), board );
+	return check_for_sqr_attacked( opp_board );
+}
+
+// Requirements for castling are that the king and rook are in their starting places and have not moved,
+//   there are no pieces between the king or rook, 
+//   and the sqr the king is on, the destination square of the king, and the sqr the king travels through can't be attacked
+// These requirements are validated in the below functions:
+
 function test_king_side_castle( board, k, y ) {
-	if( R.any( l => l === k, board.castling )) {
+	if( R.any( l => l === k, board.castling )) { // Check to be sure castling is still an option
 		const sqrs        = board.square_list;
-		const opp_board   = R.set( R.lensProp('turn'), Helper.get_opposite_color( board.turn ), board );
 		const sqr_bool    = sqrs["6"+y].side === "" && sqrs["7"+y].side === "";
-		const check_check = check_for_sqr_attacked( opp_board );
+		const check_check = check_for_sqr_attacked_by_opp_color( board );
 		const in_check    = check_check("5"+y) || check_check("6"+y) || check_check("7"+y);
-		if( sqr_bool && !in_check ) return [k];
+		const correct_p   = sqrs["5"+y].piece === "k" && sqrs["8"+y].piece === "r";
+		if( sqr_bool && !in_check && correct_p ) return [k];
 	}
 	return [];
 }
 
 function test_queen_side_castle( board, q, y ) {
-	if( R.any( l => l === q, board.castling )) {
+	if( R.any( l => l === q, board.castling )) { // Check to be sure castling is still an option
 		const sqrs        = board.square_list;
-		const opp_board   = R.set( R.lensProp('turn'), Helper.get_opposite_color( board.turn ), board );
 		const sqr_bool    = sqrs["2"+y].side === "" && sqrs["3"+y].side === "" && sqrs["4"+y].side === "";
-		const check_check = check_for_sqr_attacked( opp_board );
+		const check_check = check_for_sqr_attacked_by_opp_color( board );
 		const in_check    = check_check("3"+y) || check_check("4"+y) || check_check("5"+y);
-		if( sqr_bool && !in_check ) return [q]; 
+		const correct_p   = sqrs["5"+y].piece === "k" && sqrs["1"+y].piece === "r";
+		if( sqr_bool && !in_check && correct_p ) return [q]; 
 	}
 	return [];
 }
 
-// Note: get_valid_castling assumes the provided castling details in the FEN were valid. If they weren't valid,
-// duplicate kings and rooks can spontaneously appear in the middle of a game (maybe change this?)
 function get_valid_castling( board ) {
+	// Set the variables to be used:
 	const y      = board.turn === "w" ? "1" : "8";
 	const k_side = board.turn === "w" ? "K" : "k";
 	const q_side = board.turn === "w" ? "Q" : "q";
@@ -88,6 +102,7 @@ function get_valid_castling( board ) {
 function get_valid_en_passant( board ) {
 	if( board.en_passant ) {
 		const end_sqr = board.square_list[ board.en_passant ];
+		// Direction of y movement changes depending on board turn
 		const delta_y = board.turn === "w" ? y => y - 1 : y => y + 1;
 		const sqr_1   = "" + (end_sqr.x - 1) + delta_y( end_sqr.y );
 		const sqr_2   = "" + (end_sqr.x + 1) + delta_y( end_sqr.y );
@@ -103,8 +118,10 @@ function get_pawn_2_step_start_moves( board ) {
 	const sqr_fin = sqr => (sqr.x).toString() + (board.turn === "w" ? "4" : "5");
 	const sqr_mid = sqr => (sqr.x).toString() + (board.turn === "w" ? "3" : "6");
 	const good_piece = sqr => sqr.piece === "p" && sqr.side === board.turn;
-	const good_sqr   = sqr => (sqr.side === "w" && sqr.y === 2 || sqr.side === "b" && sqr.y === 7);
-	const good_move  = sqr => board.square_list[sqr_fin(sqr)].side === "" && board.square_list[sqr_mid(sqr)].side === "";
+	const good_sqr   = sqr => sqr.side === "w" && sqr.y === 2 ||
+		                      sqr.side === "b" && sqr.y === 7;
+	const good_move  = sqr => Helper.get_side(board, sqr_fin(sqr)) === "" && 
+	                          Helper.get_side(board, sqr_mid(sqr)) === "";
 
 	const squares_to_test = R.filter( s => good_piece(s) && good_sqr(s), board.square_list );
 	const squares_to_use  = R.filter( good_move, squares_to_test );
@@ -129,6 +146,7 @@ const get_new_turn = board => Helper.get_opposite_color( board.turn );
 const get_new_fullmove = board => board.turn === "b" ? board.fullmoves + 1 : board.fullmoves;
 const get_new_halfmove = (board, start_sqr) => start_sqr.piece === "p" ? 0 : board.halfmoves + 1;
 
+// If pawn and 2 step move, then there will be an en passant square, else set value of en passant to NaN
 const get_new_en_passant = function( board, start_sqr, end_sqr ) {
 	const is_pawn_move     = start_sqr.piece === "p";
 	const is_two_step_move = Math.abs(start_sqr.y - end_sqr.y) === 2;
@@ -154,6 +172,8 @@ const get_new_castling_from_move = function( board, start_sqr ) {
 	return castle_str;
 }
 
+// This function uses the get castling from move to check if the piece moved was a rook or king
+// Also checks to see if captured piece was a rook and updates that accordingly
 const get_new_castling_from_capture = function( board, start_sqr, end_sqr ) {
 	const p = end_sqr.piece;
 	const x = end_sqr.x;
@@ -177,39 +197,42 @@ const get_new_board_array_from_move = function( board, start, end ) {
 	return R.set( R.lensProp(end), new_end, R.set( R.lensProp(start), new_start, sqr_obj ));
 }
 
-function get_new_board_array_from_castle( board, letter, y ) {
+function perform_castle( board, y, old_k, old_r, new_k, new_r ) {
 	const inty = parseInt(y);
+	// Update the four squares that change in a caslting move:
+	const old_king = new Square( "", " ", old_k, inty );
+	const old_rook = new Square( "", " ", old_r, inty );
+	const new_king = new Square( board.turn, "k", new_k, inty );
+	const new_rook = new Square( board.turn, "r", new_r, inty );
+	// Set each of the squares functionally:
+	return R.set( R.lensProp( "" + old_k + y ), old_king,
+	       R.set( R.lensProp( "" + old_r + y ), old_rook,
+	       R.set( R.lensProp( "" + new_k + y ), new_king,
+	       R.set( R.lensProp( "" + new_r + y ), new_rook, board.square_list ))));	
+}
+
+function get_new_board_array_from_castle( board, letter, y ) {
 	if( R.toUpper( letter ) === "Q" ) {
-		const old_king = new Square( "", " ", 5, inty );
-		const old_rook = new Square( "", " ", 1, inty );
-		const new_king = new Square( board.turn, "k", 3, inty );
-		const new_rook = new Square( board.turn, "r", 4, inty );
-		return R.set( R.lensProp( "5" + y ), old_king,
-		       R.set( R.lensProp( "1" + y ), old_rook,
-		       R.set( R.lensProp( "3" + y ), new_king,
-		       R.set( R.lensProp( "4" + y ), new_rook, board.square_list ))));
+		return perform_castle( board, y, 5, 1, 3, 4 );
 	} else if( R.toUpper( letter ) === "K" ) {
-		const old_king = new Square( "", " ", 5, inty );
-		const old_rook = new Square( "", " ", 8, inty );
-		const new_king = new Square( board.turn, "k", 7, inty );
-		const new_rook = new Square( board.turn, "r", 6, inty );
-		return R.set( R.lensProp( "5" + y ), old_king,
-		       R.set( R.lensProp( "8" + y ), old_rook,
-		       R.set( R.lensProp( "7" + y ), new_king,
-		       R.set( R.lensProp( "6" + y ), new_rook, board.square_list ))));
+		return perform_castle( board, y, 5, 8, 7, 6 );
 	}
 	throw "A castling move was attempted with an invalid letter input.";
 }
 
 function get_new_board_array_from_en_passant( board, start ) {
+	// Get a square for the end sqr (target of pawn that is moving), the passant square (pawn the will be captured), and start sqr
 	const end_int   = parseInt( board.en_passant );
 	const end_str   = board.en_passant.toString();
 	const pass_num  = (board.turn === "w" ? end_int - 1 : end_int + 1 ).toString();
-	const start_sqr = board.square_list[ start ];
-	const new_start = new Square( "", " ", start_sqr.x, start_sqr.y );
 	const pass_sqr  = board.square_list[ pass_num ];
+	const start_sqr = board.square_list[ start ];
+
+	// Update each of the squares:
+	const new_start = new Square( "", " ", start_sqr.x, start_sqr.y );
 	const dead_pawn = new Square( "", " ", pass_sqr.x, pass_sqr.y );
 	const new_end   = new Square( start_sqr.side, "p", parseInt(end_str[0]), parseInt(end_str[1]));
+	// Set them on the board:
 	return R.set( R.lensProp( "" + start_sqr.x + start_sqr.y ), new_start, 
 		   R.set( R.lensProp( pass_num ), dead_pawn,
 		   R.set( R.lensProp( end_int.toString() ), new_end, board.square_list )));  
@@ -235,20 +258,22 @@ function make_capture( board, start, end ) {
 	const new_sqr_arr    = get_new_board_array_from_move( board, start, end );
 	const new_turn       = get_new_turn( board );
 	const new_castling   = get_new_castling_from_move( board, start_sqr );
-	const new_en_passant = NaN;
-	const new_halfmoves  = 0;
+	const new_en_passant = NaN; // En passant can't come after a capture
+	const new_halfmoves  = 0;   // Capturing resets halfmove counter to 0
 	const new_fullmoves  = get_new_fullmove( board );
 	return new Board( new_sqr_arr, new_turn, new_castling, new_en_passant, new_halfmoves, new_fullmoves );
 }
 
 function make_castling( board, letter ) {
+	// Determine which side of the castling string to replace:
 	const y = letter === R.toUpper( letter ) ? "1" : "8";
 	const castle_regex = letter === R.toUpper( letter ) ? /KQ/ : /kq/;
+
 	const new_sqr_arr    = get_new_board_array_from_castle( board, letter, y );
 	const new_turn       = get_new_turn( board );
 	const new_castling   = R.replace( castle_regex, "", board.castling );
-	const new_en_passant = NaN;
-	const new_halfmoves  = board.halfmoves + 1;
+	const new_en_passant = NaN; // No en passant after castle
+	const new_halfmoves  = board.halfmoves + 1; // Halfmoves must be incremented
 	const new_fullmoves  = get_new_fullmove( board );
 
 	return new Board( new_sqr_arr, new_turn, new_castling, new_en_passant, new_halfmoves, new_fullmoves );
@@ -257,17 +282,21 @@ function make_castling( board, letter ) {
 function make_en_passant( board, start ) {
 	const new_sqr_arr    = get_new_board_array_from_en_passant( board, start );
 	const new_turn       = get_new_turn( board );
-	const new_castling   = board.castling;
-	const new_en_passant = NaN;
-	const new_halfmoves  = 0;
+	const new_castling   = board.castling; // There's never a change to castling after an en passant
+	const new_en_passant = NaN;            // No en passant after en passant
+	const new_halfmoves  = 0;              // Halfmoves must reset after capture
 	const new_fullmoves  = get_new_fullmove( board ); 
 
 	return new Board( new_sqr_arr, new_turn, new_castling, new_en_passant, new_halfmoves, new_fullmoves );
 }
 
+// update_list_for_promotions is the only function that takes in already finished boards and updates them to fit
 function update_list_for_promotion( all_boards ) {
-	const is_good_pawn  = sqr => sqr.piece === "p" && ((sqr.side === "w" && sqr.y === 8) || (sqr.side === "b" && sqr.y === 1));
+	const is_good_pawn  = sqr => sqr.piece === "p" &&
+	                             ((sqr.side === "w" && sqr.y === 8) ||
+	                              (sqr.side === "b" && sqr.y === 1));
 	const has_promotion = board => R.any( is_good_pawn, R.values( board.square_list ));
+
 	function create_promo_boards( board ) {
 		if( !has_promotion( board )) {
 			return board;
@@ -279,6 +308,7 @@ function update_list_for_promotion( all_boards ) {
 		const p_set   = sqr => R.set( p_lens, sqr, board );
 		const p_piece = piece => new Square( p_val.side, piece, p_val.x, p_val.y );
 		const new_squares = R.map( p_piece, ["q","r","b","n"] );
+		// Return 4 new boards: 1 where the pawn turns into queen, rook, bishop, and knight each
 		return R.map( p_set, new_squares );
 	}
 	return R.flatten( R.map( create_promo_boards, all_boards ));
