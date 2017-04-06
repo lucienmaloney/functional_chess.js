@@ -1,0 +1,23 @@
+{
+  "name": "functional_chess.js",
+  "version": "0.0.9",
+  "description": "Chess written in completely functional javascript",
+  "main": "functional_chess.js",
+  "dependencies": {
+    "ramda": "^0.23.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucienmaloney/functional_chess.js.git"
+  },
+  "author": "Lucien Maloney",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lucienmaloney/functional_chess.js/issues"
+  },
+  "homepage": "https://github.com/lucienmaloney/functional_chess.js#readme"
+}
